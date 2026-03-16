@@ -5,57 +5,57 @@
 
 -	Mục tiêu của hệ thống:
 
-o	Tự động hóa quy trình tổ chức-bán vé-kiểm soát tham dự.
+Tự động hóa quy trình tổ chức-bán vé-kiểm soát tham dự.
 
-o	Giảm tình trạng vé giả hoặc check-in thủ công.
+Giảm tình trạng vé giả hoặc check-in thủ công.
 
-o	Theo dõi doanh thu và tỷ lệ người tham dự thực tế.
+Theo dõi doanh thu và tỷ lệ người tham dự thực tế.
 
 2.	Các vai trò có trong hệ thống
 -	Admin: quản lý toàn bộ hệ thống.
 
 -	Chức năng:
 
-  o Quản lý tài khoản.
+Quản lý tài khoản.
 
-  o	Quản lý danh mục sự kiện.
+Quản lý danh mục sự kiện.
 
-  o	Quản lý địa điểm tổ chức.
+Quản lý địa điểm tổ chức.
 
-  o	Theo dõi doanh thu toàn hệ thống.
+Theo dõi doanh thu toàn hệ thống.
 
-  o	Thiết lập chính sách hoàn /hủy vé.
+Thiết lập chính sách hoàn /hủy vé.
 
 -	Ban tổ chức: là người tạo và quản lý sự kiện.
 
 -	Chức năng:
 
-o	Tạo sự kiện mới.
+Tạo sự kiện mới.
 
-o	Thiết lập : thời gian,địa điểm,số lượng vé,loại vé.
+Thiết lập : thời gian,địa điểm,số lượng vé,loại vé.
 
-o	Quản lý bán vé.
+Quản lý bán vé.
 
-o	Xem báo cáo bán vé.
+Xem báo cáo bán vé.
 
-o	Check-in người tham dự bằng QR.
+Check-in người tham dự bằng QR.
 
 -	Khách tham dự:người mua vé tham dự sự kiện.
 -	Chức năng:
 
-o	Xem danh sách sự kiện.
+Xem danh sách sự kiện.
 
-o	Xem chi tiết sự kiện.
+Xem chi tiết sự kiện.
 
-o	Đặt vé online.
+Đặt vé online.
 
-o	Thanh toán.
+Thanh toán.
 
-o	Nhận vé điện tử qua email.
+Nhận vé điện tử qua email.
 
-o	Check-in bằng QR code.
+Check-in bằng QR code.
 
-o	Yêu cầu hoàn/hủy vé.
+Yêu cầu hoàn/hủy vé.
 
 3. Quy trình hoạt động chính của hệ thống
  	
