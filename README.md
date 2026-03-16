@@ -16,19 +16,20 @@ o	Theo dõi doanh thu và tỷ lệ người tham dự thực tế.
 
 -	Chức năng:
 
-o Quản lý tài khoản.
+  o Quản lý tài khoản.
 
-o	Quản lý danh mục sự kiện.
+  o	Quản lý danh mục sự kiện.
 
-o	Quản lý địa điểm tổ chức.
+  o	Quản lý địa điểm tổ chức.
 
-o	Theo dõi doanh thu toàn hệ thống.
+  o	Theo dõi doanh thu toàn hệ thống.
 
-o	Thiết lập chính sách hoàn /hủy vé.
+  o	Thiết lập chính sách hoàn /hủy vé.
 
 -	Ban tổ chức: là người tạo và quản lý sự kiện.
 
 -	Chức năng:
+
 o	Tạo sự kiện mới.
 
 o	Thiết lập : thời gian,địa điểm,số lượng vé,loại vé.
