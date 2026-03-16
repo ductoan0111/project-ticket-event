@@ -28,7 +28,7 @@ function App() {
           Count is {count}
         </button>
       </section>
-
+{/* Toan day code */}
       <div className="ticks"></div>
 
       <section id="next-steps">
