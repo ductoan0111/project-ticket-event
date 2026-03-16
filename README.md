@@ -30,7 +30,7 @@ o	Nhận vé điện tử qua email.
 o	Check-in bằng QR code.
 o	Yêu cầu hoàn/hủy vé.
 3. Quy trình hoạt động chính của hệ thống
-1. Quy trình bán vé
+-Quy trình bán vé
 Flow cơ bản:
 Ban tổ chức tạo sự kiện
 Người dùng xem sự kiện
@@ -41,7 +41,7 @@ Hệ thống:
 tạo mã QR vé
 tạo vé PDF
 gửi email vé điện tử
-2. Quy trình check-in
+-Quy trình check-in
 Khách đến sự kiện
 Xuất trình QR code
 Ban tổ chức dùng app quét QR
@@ -49,13 +49,13 @@ Hệ thống kiểm tra:
 vé hợp lệ
 chưa check-in
 Cập nhật trạng thái Checked-in
-3. Quy trình hoàn / huỷ vé
+-Quy trình hoàn / huỷ vé
 Người dùng gửi yêu cầu huỷ
 Hệ thống kiểm tra điều kiện:
 trước thời gian quy định
 Admin hoặc hệ thống duyệt
 Hoàn tiền qua cổng thanh toán
-4. Chức năng chính của hệ thống
+-Chức năng chính của hệ thống
 1. Quản lý sự kiện
 Tạo / sửa / xoá sự kiện
 Quản lý lịch sự kiện
