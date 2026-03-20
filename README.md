@@ -1,7 +1,7 @@
 Hệ thống quản lý sự kiện & bán vé(Event Management)
 
 
-1.	Ý tưởng tổng quan hệ thống quản lý sự kiện & bán vé
+Ý tưởng tổng quan hệ thống quản lý sự kiện & bán vé
 
   •	Hệ thống cho phép Ban tổ chức tạo và quản lý sự kiện, bán vé trực tuyến và kiểm soát người tham dự bằng QR code.
 
@@ -15,7 +15,7 @@ Hệ thống quản lý sự kiện & bán vé(Event Management)
 
     o	Theo dõi doanh thu và tỷ lệ người tham dự thực tế.
 
-2.	Các vai trò có trong hệ thống
+Các vai trò có trong hệ thống
 
   •	Admin: quản lý toàn bộ hệ thống.
 
@@ -59,8 +59,8 @@ Hệ thống quản lý sự kiện & bán vé(Event Management)
 
     o	Nhận vé điện tử qua email.
 
-o	Check-in bằng QR code.
+    o	Check-in bằng QR code.
 
-o	Yêu cầu hoàn/hủy vé.
+    o	Yêu cầu hoàn/hủy vé.
 
 
