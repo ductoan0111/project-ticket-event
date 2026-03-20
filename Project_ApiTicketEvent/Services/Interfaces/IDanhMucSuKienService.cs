@@ -10,6 +10,9 @@ namespace Services.Interfaces
     {
         Task<List<DanhMucSuKien>> GetAllAsync();
         Task<DanhMucSuKien?> GetByNameAsync(string tenDanhMuc);
-
+        DanhMucSuKien? GetById(int id);
+        int Create(DanhMucSuKien entity);
+        bool Update(DanhMucSuKien entity);
+        bool Delete(int id);
     }
 }

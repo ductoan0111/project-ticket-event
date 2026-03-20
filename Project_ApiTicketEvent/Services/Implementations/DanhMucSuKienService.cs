@@ -19,11 +19,25 @@ namespace Services.Implementations
             _repo = repo;
         }
 
-        // Attendee: thường chỉ lấy danh mục đang hoạt động
         public Task<List<DanhMucSuKien>> GetAllAsync()
             => _repo.GetAllAsync(trangThai: true);
 
         public Task<DanhMucSuKien?> GetByNameAsync(string tenDanhMuc)
             => _repo.GetByNameAsync(tenDanhMuc, trangThai: true);
+
+        public DanhMucSuKien? GetById(int id)
+            => _repo.GetById(id);
+
+        public int Create(DanhMucSuKien entity)
+        {
+            entity.TrangThai = true;
+            return _repo.Create(entity);
+        }
+
+        public bool Update(DanhMucSuKien entity)
+            => _repo.Update(entity);
+
+        public bool Delete(int id)
+            => _repo.Delete(id);
     }
 }
