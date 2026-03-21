@@ -43,7 +43,7 @@ namespace Repositories.Implementations
                 dm.TenDanhMuc,
                 sk.DiaDiemID, dd.TenDiaDiem,
                 sk.ThoiGianBatDau, sk.ThoiGianKetThuc,
-                sk.MoTa, sk.TrangThai
+                sk.MoTa,sk.AnhBiaUrl, sk.TrangThai
             FROM dbo.SuKien sk
             JOIN dbo.DanhMucSuKien dm ON dm.DanhMucID = sk.DanhMucID
             LEFT JOIN dbo.DiaDiem dd ON dd.DiaDiemID = sk.DiaDiemID
@@ -69,7 +69,7 @@ namespace Repositories.Implementations
                 dm.TenDanhMuc,
                 sk.DiaDiemID, dd.TenDiaDiem,
                 sk.ThoiGianBatDau, sk.ThoiGianKetThuc,
-                sk.MoTa, sk.TrangThai
+                sk.MoTa,sk.AnhBiaUrl, sk.TrangThai
             FROM dbo.SuKien sk
             JOIN dbo.DanhMucSuKien dm ON dm.DanhMucID = sk.DanhMucID
             LEFT JOIN dbo.DiaDiem dd ON dd.DiaDiemID = sk.DiaDiemID
@@ -188,48 +188,28 @@ namespace Repositories.Implementations
 
             return await connection.QueryAsync<SuKien>(sql, new { Now = DateTime.Now });
         }
+
         public List<SuKien> GetPending()
         {
-                    const string sql = @"
-        SELECT
-            SuKienID, DanhMucID, DiaDiemID, ToChucID,
-            TenSuKien, MoTa, ThoiGianBatDau, ThoiGianKetThuc,
-            AnhBiaUrl, TrangThai, NgayTao
-        FROM dbo.SuKien
-        WHERE TrangThai = 0
-        ORDER BY NgayTao DESC, SuKienID DESC;";
+            const string sql = @"
+                SELECT SuKienID, DanhMucID, DiaDiemID, ToChucID, TenSuKien, 
+                       MoTa, ThoiGianBatDau, ThoiGianKetThuc, AnhBiaUrl, 
+                       TrangThai, NgayTao
+                FROM dbo.SuKien
+                WHERE TrangThai = 0
+                ORDER BY NgayTao DESC;";
 
             var list = new List<SuKien>();
-
             using var conn = _connectionFactory.CreateConnection();
             conn.Open();
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
 
-            using var rd = cmd.ExecuteReader();
-            while (rd.Read())
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                var item = new SuKien
-                {
-                    SuKienID = rd.GetInt32(0),
-                    DanhMucID = rd.GetInt32(1),
-                    DiaDiemID = rd.GetInt32(2),
-                    ToChucID = rd.GetInt32(3),
-
-                    TenSuKien = rd.GetString(4),
-                    MoTa = rd.IsDBNull(5) ? null : rd.GetString(5),
-
-                    ThoiGianBatDau = rd.GetDateTime(6),
-                    ThoiGianKetThuc = rd.GetDateTime(7),
-
-                    AnhBiaUrl = rd.IsDBNull(8) ? null : rd.GetString(8),
-
-                    TrangThai = Convert.ToByte(rd.GetValue(9)),
-                    NgayTao = rd.GetDateTime(10)
-                };
-
-                list.Add(item);
+                list.Add(MapSuKien(reader));
             }
 
             return list;
@@ -237,38 +217,62 @@ namespace Repositories.Implementations
 
         public bool Approve(int suKienId)
         {
-            return UpdateStatusIfPending(suKienId, 1);
-        }
-
-        public bool Cancel(int suKienId)
-        {
-            return UpdateStatusIfPending(suKienId, 5);
-        }
-        private bool UpdateStatusIfPending(int suKienId, byte newStatus)
-        {
             const string sql = @"
-            UPDATE dbo.SuKien
-            SET TrangThai = @newStatus
-            WHERE SuKienID = @id AND TrangThai = 0;";
+                UPDATE dbo.SuKien
+                SET TrangThai = 1
+                WHERE SuKienID = @Id AND TrangThai = 0;";
 
             using var conn = _connectionFactory.CreateConnection();
             conn.Open();
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
+            
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@Id";
+            p.Value = suKienId;
+            cmd.Parameters.Add(p);
 
-            var p1 = cmd.CreateParameter();
-            p1.ParameterName = "@newStatus";
-            p1.Value = newStatus;
-            cmd.Parameters.Add(p1);
+            return cmd.ExecuteNonQuery() > 0;
+        }
 
-            var p2 = cmd.CreateParameter();
-            p2.ParameterName = "@id";
-            p2.Value = suKienId;
-            cmd.Parameters.Add(p2);
+        public bool Cancel(int suKienId)
+        {
+            const string sql = @"
+                UPDATE dbo.SuKien
+                SET TrangThai = 5
+                WHERE SuKienID = @Id AND TrangThai = 0;";
 
-            var affected = cmd.ExecuteNonQuery();
-            return affected > 0;
+            using var conn = _connectionFactory.CreateConnection();
+            conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@Id";
+            p.Value = suKienId;
+            cmd.Parameters.Add(p);
+
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+        private static SuKien MapSuKien(IDataReader r)
+        {
+            return new SuKien
+            {
+                SuKienID = r.GetInt32(r.GetOrdinal("SuKienID")),
+                DanhMucID = r.GetInt32(r.GetOrdinal("DanhMucID")),
+                DiaDiemID = r.IsDBNull(r.GetOrdinal("DiaDiemID")) ? 0 : r.GetInt32(r.GetOrdinal("DiaDiemID")),
+                ToChucID = r.GetInt32(r.GetOrdinal("ToChucID")),
+                TenSuKien = r.GetString(r.GetOrdinal("TenSuKien")),
+                MoTa = r.IsDBNull(r.GetOrdinal("MoTa")) ? null : r.GetString(r.GetOrdinal("MoTa")),
+                ThoiGianBatDau = r.GetDateTime(r.GetOrdinal("ThoiGianBatDau")),
+                ThoiGianKetThuc = r.GetDateTime(r.GetOrdinal("ThoiGianKetThuc")),
+                AnhBiaUrl = r.IsDBNull(r.GetOrdinal("AnhBiaUrl")) ? null : r.GetString(r.GetOrdinal("AnhBiaUrl")),
+                TrangThai = Convert.ToByte(r["TrangThai"]),
+                NgayTao = r.GetDateTime(r.GetOrdinal("NgayTao"))
+            };
         }
     }
 }

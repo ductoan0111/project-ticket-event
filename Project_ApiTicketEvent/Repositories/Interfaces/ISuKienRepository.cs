@@ -20,7 +20,6 @@ namespace Repositories.Interfaces
         Task<IEnumerable<SuKien>> GetExpiredEventsAsync();
         List<SuKien> GetPending();
         bool Approve(int suKienId);
-
         bool Cancel(int suKienId);
     }
 }
