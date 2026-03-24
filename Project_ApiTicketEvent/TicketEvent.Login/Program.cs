@@ -18,10 +18,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+// Repositories
 builder.Services.AddScoped<INguoiDungRepository, NguoiDungRepository>();
 builder.Services.AddScoped<IVaiTroRepository, VaiTroRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
+builder.Services.AddScoped<IVaiTroService, VaiTroService>();
+
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var keyBytes = Encoding.UTF8.GetBytes(jwtSection["Key"]!);
