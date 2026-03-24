@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Repositories.Interfaces;
+using Services.Interfaces;
 
 namespace TicketEvent.Login.Controllers
 {
@@ -7,25 +7,24 @@ namespace TicketEvent.Login.Controllers
     [ApiController]
     public class RolesController : ControllerBase
     {
-        private readonly IVaiTroRepository _roleRepo;
+        private readonly IVaiTroService _service;
 
-        public RolesController(IVaiTroRepository roleRepo)
+        public RolesController(IVaiTroService service)
         {
-            _roleRepo = roleRepo;
+            _service = service;
         }
-
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var roles = _roleRepo.GetAll();
+            var roles = _service.GetAll();
             return Ok(roles);
         }
 
         [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
-            var role = _roleRepo.GetById(id);
+            var role = _service.GetById(id);
             if (role == null) return NotFound();
 
             return Ok(role);
