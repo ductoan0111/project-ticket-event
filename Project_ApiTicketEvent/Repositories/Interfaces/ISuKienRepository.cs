@@ -21,5 +21,6 @@ namespace Repositories.Interfaces
         List<SuKien> GetPending();
         bool Approve(int suKienId);
         bool Cancel(int suKienId);
+        Task<bool> DeleteAsync(int suKienId);
     }
 }

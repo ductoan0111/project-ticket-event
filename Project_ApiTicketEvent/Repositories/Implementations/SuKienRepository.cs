@@ -257,6 +257,29 @@ namespace Repositories.Implementations
             return cmd.ExecuteNonQuery() > 0;
         }
 
+        public async Task<bool> DeleteAsync(int suKienId)
+        {
+            // Soft delete - set TrangThai = 6 (Đã xóa)
+            const string sql = @"
+                UPDATE dbo.SuKien
+                SET TrangThai = 6
+                WHERE SuKienID = @Id;";
+
+            using var conn = _connectionFactory.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@Id";
+            p.Value = suKienId;
+            cmd.Parameters.Add(p);
+
+            var affected = cmd.ExecuteNonQuery();
+            return await Task.FromResult(affected > 0);
+        }
+
         private static SuKien MapSuKien(IDataReader r)
         {
             return new SuKien
