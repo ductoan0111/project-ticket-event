@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 
 namespace Models.DTOs.Requests
 {
-    /// <summary>
-    /// Request gửi thông báo cho người dùng
-    /// </summary>
     public class GuiThongBaoRequest
     {
         public int SuKienID { get; set; }
@@ -19,9 +16,6 @@ namespace Models.DTOs.Requests
         public string? GhiChu { get; set; }
     }
 
-    /// <summary>
-    /// Request gửi thông báo cho người mua vé cụ thể
-    /// </summary>
     public class GuiThongBaoTheoVeRequest
     {
         public int VeID { get; set; }
