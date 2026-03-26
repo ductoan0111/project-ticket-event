@@ -28,7 +28,7 @@ namespace TicketEvent.Organizer.Controllers
                 return BadRequest(new { success = false, message = "NhanVienID không hợp lệ." });
 
             var result = _service.Checkin(request);
-            
+
             // result là dynamic object từ repository
             var resultDict = result as IDictionary<string, object>;
             if (resultDict != null && resultDict.ContainsKey("success"))
