@@ -171,9 +171,6 @@ WHERE VeID = @VeID AND TrangThai = 0;";
             }
         }
 
-        /// <summary>
-        /// Insert vào bảng NhatKyCheckin (log tất cả lần quét - cả thành công và thất bại)
-        /// </summary>
         private static void InsertNhatKyCheckin(SqlConnection conn, SqlTransaction tx, int veId, int suKienId, int nhanVienId, bool ketQua, string? ghiChu)
         {
             const string sql = @"
