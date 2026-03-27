@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Repositories.Interfaces;
+using Services.Interfaces;
 using static Models.DTOs.Requests.LoaiVeRequest;
 
 namespace TicketEvent.Attendee.Controllers
@@ -9,19 +9,18 @@ namespace TicketEvent.Attendee.Controllers
     [ApiController]
     public class LoaiVeController : ControllerBase
     {
-        private readonly ILoaiVeRepository _repo;
+        private readonly ILoaiVeService _service;
 
-        public LoaiVeController(ILoaiVeRepository repo)
+        public LoaiVeController(ILoaiVeService service)
         {
-            _repo = repo;
+            _service = service;
         }
 
         // GET: /api/LoaiVe
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            // Attendee: mặc định chỉ lấy loại vé đang bán (TrangThai=1)
-            var data = await _repo.GetAllAsync(trangThai: true);
+            var data = await _service.GetAllAsync();
             return Ok(data);
         }
 
@@ -32,7 +31,7 @@ namespace TicketEvent.Attendee.Controllers
             if (req == null || string.IsNullOrWhiteSpace(req.Ten))
                 return BadRequest(new { message = "Thiếu query parameter: ten" });
 
-            var data = await _repo.GetByNameAsync(req.Ten, trangThai: true);
+            var data = await _service.GetByNameAsync(req.Ten);
             return Ok(data);
         }
 
@@ -43,7 +42,7 @@ namespace TicketEvent.Attendee.Controllers
             if (req == null || string.IsNullOrWhiteSpace(req.TenSuKien))
                 return BadRequest(new { message = "Thiếu query parameter: tenSuKien" });
 
-            var data = await _repo.GetByTenSuKienAsync(req.TenSuKien, trangThai: true);
+            var data = await _service.GetByTenSuKienAsync(req.TenSuKien);
             return Ok(data);
         }
     }
