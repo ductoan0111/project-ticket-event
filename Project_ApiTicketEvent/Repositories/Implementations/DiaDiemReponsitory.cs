@@ -100,23 +100,23 @@ namespace Repositories.Implementations
         }
         public int Create(DiaDiem entity)
         {
-                using var conn = _connectionFactory.CreateConnection();
-                conn.Open();
+            using var conn = _connectionFactory.CreateConnection();
+            conn.Open();
 
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
                 INSERT INTO dbo.DiaDiem (TenDiaDiem, DiaChi, SucChua, MoTa, TrangThai)
                 OUTPUT INSERTED.DiaDiemID
                 VALUES (@TenDiaDiem, @DiaChi, @SucChua, @MoTa, @TrangThai);";
 
-                AddParam(cmd, "@TenDiaDiem", entity.TenDiaDiem);
-                AddParam(cmd, "@DiaChi", entity.DiaChi);
-                AddParam(cmd, "@SucChua", entity.SucChua);
-                AddParam(cmd, "@MoTa", entity.MoTa);
-                AddParam(cmd, "@TrangThai", entity.TrangThai);
+            AddParam(cmd, "@TenDiaDiem", entity.TenDiaDiem);
+            AddParam(cmd, "@DiaChi", entity.DiaChi);
+            AddParam(cmd, "@SucChua", entity.SucChua);
+            AddParam(cmd, "@MoTa", entity.MoTa);
+            AddParam(cmd, "@TrangThai", entity.TrangThai);
 
-                var obj = cmd.ExecuteScalar();
-                return Convert.ToInt32(obj);
+            var obj = cmd.ExecuteScalar();
+            return Convert.ToInt32(obj);
         }
 
         public bool Delete(int id)
