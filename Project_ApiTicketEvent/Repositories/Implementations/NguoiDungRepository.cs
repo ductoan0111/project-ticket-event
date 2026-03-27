@@ -85,6 +85,34 @@ namespace Repositories.Implementations
             return Map(reader);
         }
 
+        public List<NguoiDung> GetByMaVaiTro(string maVaiTro)
+        {
+            const string sql = @"
+            SELECT nd.NguoiDungId, nd.HoTen, nd.Email, nd.MatKhauHash, nd.VaiTroId, nd.NgayTao, nd.TrangThai, nd.TenDangNhap, nd.SoDienThoai
+            FROM dbo.NguoiDung nd
+            INNER JOIN dbo.VaiTro vt ON vt.VaiTroId = nd.VaiTroId
+            WHERE vt.MaVaiTro = @MaVaiTro
+              AND (nd.TrangThai = 1 OR nd.TrangThai IS NULL)
+            ORDER BY nd.NguoiDungId DESC;";
+
+            var list = new List<NguoiDung>();
+
+            using var conn = _factory.CreateConnection();
+            conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            AddParam(cmd, "@MaVaiTro", maVaiTro);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(Map(reader));
+            }
+
+            return list;
+        }
+
         public int Create(NguoiDung user)
         {
             user.NgayTao ??= DateTime.Now;
@@ -120,6 +148,7 @@ namespace Repositories.Implementations
             UPDATE dbo.NguoiDung
             SET HoTen = @HoTen,
                 Email = @Email,
+                MatKhauHash = @MatKhauHash,
                 VaiTroId = @VaiTroId,
                 TrangThai = @TrangThai,
                 TenDangNhap = @TenDangNhap,
@@ -135,6 +164,7 @@ namespace Repositories.Implementations
             AddParam(cmd, "@Id", user.NguoiDungId);
             AddParam(cmd, "@HoTen", user.HoTen);
             AddParam(cmd, "@Email", user.Email);
+            AddParam(cmd, "@MatKhauHash", user.MatKhauHash);
             AddParam(cmd, "@VaiTroId", user.VaiTroId);
             AddParam(cmd, "@TrangThai", user.TrangThai);
             AddParam(cmd, "@TenDangNhap", user.TenDangNhap);
@@ -184,33 +214,6 @@ namespace Repositories.Implementations
                 TenDangNhap = r["TenDangNhap"]?.ToString() ?? "",
                 SoDienThoai = r["SoDienThoai"] == DBNull.Value ? null : r["SoDienThoai"]?.ToString()
             };
-        }
-
-        public List<NguoiDung> GetByMaVaiTro(string maVaiTro)
-        {
-            const string sql = @"
-            SELECT nd.NguoiDungId, nd.HoTen, nd.Email, nd.MatKhauHash, nd.VaiTroId,
-                   nd.NgayTao, nd.TrangThai, nd.TenDangNhap, nd.SoDienThoai
-            FROM dbo.NguoiDung nd
-            INNER JOIN dbo.VaiTro vt ON vt.VaiTroId = nd.VaiTroId
-            WHERE vt.MaVaiTro = @MaVaiTro
-              AND (nd.TrangThai = 1 OR nd.TrangThai IS NULL)
-            ORDER BY nd.NguoiDungId DESC;";
-
-              var list = new List<NguoiDung>();
-
-         using var conn = _factory.CreateConnection();
-             conn.Open();
-
-    using var cmd = conn.CreateCommand();
-        cmd.CommandText = sql;
-                        AddParam(cmd, "@MaVaiTro", maVaiTro);
-
-                        using var reader = cmd.ExecuteReader();
-                        while (reader.Read())
-                            list.Add(Map(reader));
-
-                        return list;
         }
     }
 }
