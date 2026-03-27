@@ -15,11 +15,6 @@ namespace TicketEvent.Organizer.Controllers
             _service = service;
         }
 
-        /// <summary>
-        /// Lấy danh sách vé theo sự kiện (cho ban tổ chức)
-        /// GET: /api/Ve/sukien/{suKienId}?trangThai={0|1|2|3}
-        /// TrangThai: 0=Hợp lệ, 1=Đã sử dụng, 2=Đã hủy, 3=Đã hoàn
-        /// </summary>
         [HttpGet("sukien/{suKienId:int}")]
         public IActionResult GetBySuKien([FromRoute] int suKienId, [FromQuery] byte? trangThai = null)
         {

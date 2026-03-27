@@ -15,10 +15,6 @@ namespace TicketEvent.Attendee.Controllers
             _service = service;
         }
 
-        /// <summary>
-        /// Lấy danh sách vé của người dùng
-        /// GET: /api/Ve/me?nguoiSoHuuId=1
-        /// </summary>
         [HttpGet("me")]
         public IActionResult GetMyTickets([FromQuery] int nguoiSoHuuId)
         {
@@ -34,10 +30,6 @@ namespace TicketEvent.Attendee.Controllers
             });
         }
 
-        /// <summary>
-        /// Lấy chi tiết một vé theo mã vé
-        /// GET: /api/Ve/{maVe}?nguoiSoHuuId=1
-        /// </summary>
         [HttpGet("{maVe}")]
         public IActionResult GetMyTicketByMaVe([FromRoute] string maVe, [FromQuery] int nguoiSoHuuId)
         {
@@ -54,10 +46,6 @@ namespace TicketEvent.Attendee.Controllers
             return Ok(ticket);
         }
 
-        /// <summary>
-        /// Hủy vé (chuyển trạng thái sang 2)
-        /// PATCH: /api/Ve/{maVe}/cancel?nguoiSoHuuId=1
-        /// </summary>
         [HttpPatch("{maVe}/cancel")]
         public async Task<IActionResult> CancelTicket(
             [FromRoute] string maVe,
@@ -87,10 +75,6 @@ namespace TicketEvent.Attendee.Controllers
             });
         }
 
-        /// <summary>
-        /// Hoàn vé (hoàn tiền + chuyển trạng thái sang 3)
-        /// POST: /api/Ve/{maVe}/refund?nguoiSoHuuId=1
-        /// </summary>
         [HttpPost("{maVe}/refund")]
         public async Task<IActionResult> RefundTicket(
             [FromRoute] string maVe,
