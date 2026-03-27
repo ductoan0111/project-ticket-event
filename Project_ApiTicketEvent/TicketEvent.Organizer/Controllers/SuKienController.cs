@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Repositories.Interfaces;
+using Services.Interfaces;
 using Models;
 
 namespace TicketEvent.Organizer.Controllers
@@ -9,122 +9,137 @@ namespace TicketEvent.Organizer.Controllers
     [ApiController]
     public class SuKienController : ControllerBase
     {
-        private readonly ISuKienRepository _suKienRepository;
+        private readonly ISuKienService _service;
 
-        public SuKienController(ISuKienRepository suKienRepository)
+        public SuKienController(ISuKienService service)
         {
-            _suKienRepository = suKienRepository;
+            _service = service;
         }
 
         // GET: api/sukien
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SuKien>>> GetAll()
         {
-            try
-            {
-                var suKiens = await _suKienRepository.GetAllAsync();
-                return Ok(suKiens);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi khi lấy danh sách sự kiện", error = ex.Message });
-            }
+            var suKiens = await _service.GetAllAsync();
+            return Ok(suKiens);
         }
 
         // GET: api/sukien/5
         [HttpGet("{id}")]
         public async Task<ActionResult<SuKien>> GetById(int id)
         {
-            try
-            {
-                var suKien = await _suKienRepository.GetByIdAsync(id);
+            var suKien = await _service.GetByIdAsync(id);
 
-                if (suKien == null)
-                {
-                    return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
-                }
-
-                return Ok(suKien);
-            }
-            catch (Exception ex)
+            if (suKien == null)
             {
-                return StatusCode(500, new { message = "Lỗi khi lấy thông tin sự kiện", error = ex.Message });
+                return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
             }
+
+            return Ok(suKien);
         }
 
         // POST: api/sukien
         [HttpPost]
         public async Task<ActionResult<SuKien>> Create([FromBody] SuKien suKien)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Validate thời gian
-                if (suKien.ThoiGianKetThuc <= suKien.ThoiGianBatDau)
-                {
-                    return BadRequest(new { message = "Thời gian kết thúc phải sau thời gian bắt đầu" });
-                }
-
-                // Set ngày tạo
-                suKien.NgayTao = DateTime.Now;
-
-                var newId = await _suKienRepository.CreateAsync(suKien);
-                suKien.SuKienID = newId;
-
-                return CreatedAtAction(nameof(GetById), new { id = newId }, suKien);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            // Validate thời gian
+            if (suKien.ThoiGianKetThuc <= suKien.ThoiGianBatDau)
             {
-                return StatusCode(500, new { message = "Lỗi khi tạo sự kiện", error = ex.Message });
+                return BadRequest(new { message = "Thời gian kết thúc phải sau thời gian bắt đầu" });
             }
+
+            // Set ngày tạo
+            suKien.NgayTao = DateTime.Now;
+
+            var newId = await _service.CreateAsync(suKien);
+            suKien.SuKienID = newId;
+
+            return CreatedAtAction(nameof(GetById), new { id = newId }, suKien);
         }
 
         // PUT: api/sukien/5
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int id, [FromBody] SuKien suKien)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                if (id != suKien.SuKienID)
-                {
-                    return BadRequest(new { message = "ID không khớp" });
-                }
-
-                // Kiểm tra tồn tại
-                var existingSuKien = await _suKienRepository.GetByIdAsync(id);
-                if (existingSuKien == null)
-                {
-                    return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
-                }
-
-                // Validate thời gian
-                if (suKien.ThoiGianKetThuc <= suKien.ThoiGianBatDau)
-                {
-                    return BadRequest(new { message = "Thời gian kết thúc phải sau thời gian bắt đầu" });
-                }
-
-                var success = await _suKienRepository.UpdateAsync(suKien);
-
-                if (!success)
-                {
-                    return StatusCode(500, new { message = "Không thể cập nhật sự kiện" });
-                }
-
-                return Ok(new { message = "Cập nhật sự kiện thành công" });
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            if (id != suKien.SuKienID)
             {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật sự kiện", error = ex.Message });
+                return BadRequest(new { message = "ID không khớp" });
             }
+
+            // Kiểm tra tồn tại
+            var existingSuKien = await _service.GetByIdAsync(id);
+            if (existingSuKien == null)
+            {
+                return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
+            }
+
+            // Validate thời gian
+            if (suKien.ThoiGianKetThuc <= suKien.ThoiGianBatDau)
+            {
+                return BadRequest(new { message = "Thời gian kết thúc phải sau thời gian bắt đầu" });
+            }
+
+            var success = await _service.UpdateAsync(suKien);
+
+            if (!success)
+            {
+                return StatusCode(500, new { message = "Không thể cập nhật sự kiện" });
+            }
+
+            return Ok(new { message = "Cập nhật sự kiện thành công" });
+        }
+
+        // DELETE: api/sukien/5
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "ID không hợp lệ" });
+            }
+
+            // Kiểm tra tồn tại
+            var existingSuKien = await _service.GetByIdAsync(id);
+            if (existingSuKien == null)
+            {
+                return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
+            }
+
+            // Kiểm tra trạng thái - không cho xóa sự kiện đã bắt đầu hoặc đang diễn ra
+            if (existingSuKien.TrangThai == 2) // Đang diễn ra
+            {
+                return BadRequest(new { message = "Không thể xóa sự kiện đang diễn ra" });
+            }
+
+            if (existingSuKien.TrangThai == 3) // Đã kết thúc
+            {
+                return BadRequest(new { message = "Không thể xóa sự kiện đã kết thúc" });
+            }
+
+            // Kiểm tra thời gian - không cho xóa nếu sự kiện đã bắt đầu
+            if (existingSuKien.ThoiGianBatDau <= DateTime.Now)
+            {
+                return BadRequest(new { message = "Không thể xóa sự kiện đã bắt đầu hoặc đang diễn ra" });
+            }
+
+            var success = await _service.DeleteAsync(id);
+
+            if (!success)
+            {
+                return StatusCode(500, new { message = "Không thể xóa sự kiện" });
+            }
+
+            return Ok(new { message = "Xóa sự kiện thành công" });
         }
     }
 }

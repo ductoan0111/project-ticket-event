@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Repositories.Implementations;
-using Repositories.Interfaces;
+using Services.Interfaces;
 
 namespace TicketEvent.Attendee.Controllers
 {
@@ -10,26 +9,20 @@ namespace TicketEvent.Attendee.Controllers
     [ApiController]
     public class SuKienController : ControllerBase
     {
-        private readonly ISuKienRepository _repo;
+        private readonly ISuKienService _service;
 
-        public SuKienController(ISuKienRepository repo)
+        public SuKienController(ISuKienService service)
         {
-            _repo = repo;
+            _service = service;
         }
         // GET: api/sukien
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SuKien>>> GetAll()
         {
-            try
-            {
-                var suKiens = await _repo.GetAllAsync();
-                return Ok(suKiens);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi khi lấy danh sách sự kiện", error = ex.Message });
-            }
+            var suKiens = await _service.GetAllAsync();
+            return Ok(suKiens);
         }
+
         // GET: /api/SuKien/by-name?ten=Concert
         [HttpGet("by-name")]
         public async Task<IActionResult> GetByName([FromQuery] string ten)
@@ -37,20 +30,19 @@ namespace TicketEvent.Attendee.Controllers
             if (string.IsNullOrWhiteSpace(ten))
                 return BadRequest(new { message = "Thiếu query parameter: ten" });
 
-            var data = await _repo.GetByNameAsync(ten, trangThai: true);
+            var data = await _service.GetByNameAsync(ten);
             return Ok(data);
         }
 
-        // GET: /api/SuKien/by-category?id=3
-        // hoặc GET: /api/SuKien/by-category?tenDanhMuc=Workshop
+        // GET: /api/SuKien/by-category?tenDanhMuc=Workshop
         [HttpGet("by-category")]
-        public async Task<IActionResult> GetByCategory( [FromQuery] string? tenDanhMuc)
+        public async Task<IActionResult> GetByCategory([FromQuery] string? tenDanhMuc)
         {
-            if ( string.IsNullOrWhiteSpace(tenDanhMuc))
+            if (string.IsNullOrWhiteSpace(tenDanhMuc))
                 return BadRequest(new { message = "Cần truyền tenDanhMuc" });
 
-            var dataByName = await _repo.GetByDanhMucNameAsync(tenDanhMuc!, trangThai: true);
-            return Ok(dataByName);
+            var data = await _service.GetByDanhMucNameAsync(tenDanhMuc!);
+            return Ok(data);
         }
     }
 }
