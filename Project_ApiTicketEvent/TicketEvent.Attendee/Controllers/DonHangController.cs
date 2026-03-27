@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.DTOs.Requests;
-using Repositories.Interfaces;
+using Services.Interfaces;
 
 namespace TicketEvent.Attendee.Controllers
 {
@@ -9,11 +9,11 @@ namespace TicketEvent.Attendee.Controllers
     [ApiController]
     public class DonHangController : ControllerBase
     {
-        private readonly IDonHangRepository _repo;
+        private readonly IDonHangService _service;
 
-        public DonHangController(IDonHangRepository repo)
+        public DonHangController(IDonHangService service)
         {
-            _repo = repo;
+            _service = service;
         }
 
         // GET: /api/DonHang/me?nguoiMuaId=1
@@ -21,7 +21,7 @@ namespace TicketEvent.Attendee.Controllers
         public async Task<IActionResult> GetMyOrders([FromQuery] int nguoiMuaId)
         {
             if (nguoiMuaId <= 0) return BadRequest(new { message = "nguoiMuaId invalid" });
-            var data = await _repo.GetByNguoiMuaAsync(nguoiMuaId);
+            var data = await _service.GetByNguoiMuaAsync(nguoiMuaId);
             return Ok(data);
         }
 
@@ -31,7 +31,7 @@ namespace TicketEvent.Attendee.Controllers
         {
             if (nguoiMuaId <= 0) return BadRequest(new { message = "nguoiMuaId invalid" });
 
-            var data = await _repo.GetDetailAsync(donHangId, nguoiMuaId);
+            var data = await _service.GetDetailAsync(donHangId, nguoiMuaId);
             if (data == null) return NotFound(new { message = "Không tìm thấy đơn hàng." });
 
             return Ok(data);
@@ -45,7 +45,7 @@ namespace TicketEvent.Attendee.Controllers
             if (req.SuKienID <= 0) return BadRequest(new { message = "SuKienID invalid" });
             if (req.Items == null || req.Items.Count == 0) return BadRequest(new { message = "Items required" });
 
-            var donHangId = await _repo.CreateAsync(req);
+            var donHangId = await _service.CreateAsync(req);
             return Ok(new { donHangId });
         }
 
@@ -55,7 +55,7 @@ namespace TicketEvent.Attendee.Controllers
         {
             if (nguoiMuaId <= 0) return BadRequest(new { message = "nguoiMuaId invalid" });
 
-            var ok = await _repo.CancelAsync(donHangId, nguoiMuaId);
+            var ok = await _service.CancelAsync(donHangId, nguoiMuaId);
             if (!ok) return BadRequest(new { message = "Không thể hủy (đơn không tồn tại hoặc trạng thái không cho phép)." });
 
             return Ok(new { message = "Đã hủy đơn hàng." });

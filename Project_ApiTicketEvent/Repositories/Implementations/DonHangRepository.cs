@@ -12,7 +12,7 @@ using Repositories.Interfaces;
 
 namespace Repositories.Implementations
 {
-    public class DonHangRepository:IDonHangRepository
+    public class DonHangRepository : IDonHangRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
 
@@ -132,7 +132,7 @@ ORDER BY ChiTietID;";
             if (req.Items == null || req.Items.Count == 0)
                 throw new ArgumentException("Items is required");
 
-            // DonHang.TrangThai: 0=chờ thanh toán (gợi ý)
+            // DonHang.TrangThai: 0=chờ thanh toán
             const string sqlInsertDonHang = @"
 INSERT INTO dbo.DonHang (NguoiMuaID, SuKienID, TongTien, TrangThai)
 VALUES (@NguoiMuaID, @SuKienID, 0, 0);
@@ -151,7 +151,12 @@ SET TongTien = (
 )
 WHERE DonHangID = @DonHangID;";
 
-            // Dùng SqlTransaction vì bạn đang dùng SqlClient
+            //  Lấy SuKienID + DonGia chuẩn từ DB theo LoaiVeID
+            const string sqlGetLoaiVeInfo = @"
+SELECT SuKienID, DonGia
+FROM dbo.LoaiVe
+WHERE LoaiVeID = @LoaiVeID;";
+
             using var raw = _connectionFactory.CreateConnection();
             var conn = (SqlConnection)raw;
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
@@ -160,23 +165,55 @@ WHERE DonHangID = @DonHangID;";
 
             try
             {
-                int donHangId;
+                // 0) VALIDATE + CHUẨN HÓA ITEMS 
+                int suKienIdDb = 0;
+                var normalizedItems = new List<(int LoaiVeID, int SoLuong, decimal DonGia)>();
+
+                foreach (var it in req.Items)
+                {
+                    if (it.LoaiVeID <= 0) throw new ArgumentException("LoaiVeID invalid");
+                    if (it.SoLuong <= 0) throw new ArgumentException("SoLuong must be > 0");
+
+                    using (var cmdLv = new SqlCommand(sqlGetLoaiVeInfo, conn, tx))
+                    {
+                        cmdLv.Parameters.AddWithValue("@LoaiVeID", it.LoaiVeID);
+
+                        using var r = await cmdLv.ExecuteReaderAsync();
+                        if (!await r.ReadAsync())
+                            throw new ArgumentException($"LoaiVeID={it.LoaiVeID} không tồn tại.");
+
+                        var lvSuKienId = r.GetInt32(r.GetOrdinal("SuKienID"));
+                        var lvDonGia = r.GetDecimal(r.GetOrdinal("DonGia"));
+
+                        // đảm bảo tất cả LoaiVe thuộc cùng 1 sự kiện
+                        if (suKienIdDb == 0) suKienIdDb = lvSuKienId;
+                        else if (suKienIdDb != lvSuKienId)
+                            throw new ArgumentException(
+                                $"Các LoaiVe không cùng 1 sự kiện. " +
+                                $"Đang có SuKienID={suKienIdDb} nhưng LoaiVeID={it.LoaiVeID} thuộc SuKienID={lvSuKienId}.");
+
+                        normalizedItems.Add((it.LoaiVeID, it.SoLuong, lvDonGia));
+                    }
+                }
+
+                //  Nếu bạn muốn bắt buộc client gửi đúng SuKienID thì check:
+                if (req.SuKienID > 0 && req.SuKienID != suKienIdDb)
+                    throw new ArgumentException($"SuKienID gửi lên ({req.SuKienID}) không khớp DB ({suKienIdDb}).");
 
                 // 1) tạo DonHang
+                int donHangId;
                 using (var cmd = new SqlCommand(sqlInsertDonHang, conn, tx))
                 {
                     cmd.Parameters.AddWithValue("@NguoiMuaID", req.NguoiMuaID);
-                    cmd.Parameters.AddWithValue("@SuKienID", req.SuKienID);
+                    cmd.Parameters.AddWithValue("@SuKienID", suKienIdDb);
 
-                    donHangId = (int)await cmd.ExecuteScalarAsync();
+                    var result = await cmd.ExecuteScalarAsync();
+                    donHangId = result != null ? (int)result : 0;
                 }
 
-                // 2) thêm ChiTietDonHang
-                foreach (var it in req.Items)
+                // 2) thêm ChiTietDonHang 
+                foreach (var it in normalizedItems)
                 {
-                    if (it.SoLuong <= 0) throw new ArgumentException("SoLuong must be > 0");
-                    if (it.DonGia < 0) throw new ArgumentException("DonGia must be >= 0");
-
                     using var cmd = new SqlCommand(sqlInsertItem, conn, tx);
                     cmd.Parameters.AddWithValue("@DonHangID", donHangId);
                     cmd.Parameters.AddWithValue("@LoaiVeID", it.LoaiVeID);
@@ -202,9 +239,10 @@ WHERE DonHangID = @DonHangID;";
             }
         }
 
+
         public async Task<bool> CancelAsync(int donHangId, int nguoiMuaId)
         {
-            // Gợi ý trạng thái: 2=Hủy (tuỳ bạn quy ước)
+            // Gợi ý trạng thái: 2=Hủy
             const string sql = @"
 UPDATE dbo.DonHang
 SET TrangThai = 2
@@ -230,6 +268,172 @@ WHERE DonHangID = @DonHangID
 
             var affected = cmd.ExecuteNonQuery();
             return await Task.FromResult(affected > 0);
+        }
+
+        // ==================== ORGANIZER APIs ====================
+
+        public async Task<List<DonHang>> GetBySuKienIdAsync(int suKienId, byte? trangThai = null)
+        {
+            const string sql = @"
+SELECT DonHangID, NguoiMuaID, SuKienID, NgayDat, TongTien, TrangThai
+FROM dbo.DonHang
+WHERE SuKienID = @SuKienID
+  AND (@TrangThai IS NULL OR TrangThai = @TrangThai)
+ORDER BY NgayDat DESC;";
+
+            var result = new List<DonHang>();
+
+            using var conn = _connectionFactory.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+
+            var p1 = cmd.CreateParameter();
+            p1.ParameterName = "@SuKienID";
+            p1.Value = suKienId;
+            cmd.Parameters.Add(p1);
+
+            var p2 = cmd.CreateParameter();
+            p2.ParameterName = "@TrangThai";
+            p2.Value = (object?)trangThai ?? DBNull.Value;
+            cmd.Parameters.Add(p2);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                result.Add(MapDonHang(reader));
+            }
+
+            return await Task.FromResult(result);
+        }
+
+        public async Task<DonHangDetail?> GetDetailBySuKienAsync(int donHangId, int suKienId)
+        {
+            const string sqlDonHang = @"
+SELECT DonHangID, NguoiMuaID, SuKienID, NgayDat, TongTien, TrangThai
+FROM dbo.DonHang
+WHERE DonHangID = @DonHangID AND SuKienID = @SuKienID;";
+
+            const string sqlItems = @"
+SELECT 
+    ct.ChiTietID, ct.DonHangID, ct.LoaiVeID, ct.SoLuong, ct.DonGia, ct.ThanhTien,
+    lv.TenLoaiVe
+FROM dbo.ChiTietDonHang ct
+JOIN dbo.LoaiVe lv ON lv.LoaiVeID = ct.LoaiVeID
+WHERE ct.DonHangID = @DonHangID
+ORDER BY ct.ChiTietID;";
+
+            using var conn = _connectionFactory.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            DonHangDetail? dh = null;
+
+            // 1) header
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = sqlDonHang;
+
+                var p1 = cmd.CreateParameter();
+                p1.ParameterName = "@DonHangID";
+                p1.Value = donHangId;
+                cmd.Parameters.Add(p1);
+
+                var p2 = cmd.CreateParameter();
+                p2.ParameterName = "@SuKienID";
+                p2.Value = suKienId;
+                cmd.Parameters.Add(p2);
+
+                using var r = cmd.ExecuteReader();
+                if (!r.Read()) return null;
+
+                var baseDh = MapDonHang(r);
+                dh = new DonHangDetail
+                {
+                    DonHangID = baseDh.DonHangID,
+                    NguoiMuaID = baseDh.NguoiMuaID,
+                    SuKienID = baseDh.SuKienID,
+                    NgayDat = baseDh.NgayDat,
+                    TongTien = baseDh.TongTien,
+                    TrangThai = baseDh.TrangThai
+                };
+            }
+
+            // 2) items
+            using (var cmd2 = conn.CreateCommand())
+            {
+                cmd2.CommandText = sqlItems;
+
+                var p = cmd2.CreateParameter();
+                p.ParameterName = "@DonHangID";
+                p.Value = donHangId;
+                cmd2.Parameters.Add(p);
+
+                using var r2 = cmd2.ExecuteReader();
+                while (r2.Read())
+                {
+                    dh!.Items.Add(new DonHangChiTiet
+                    {
+                        ChiTietID = r2.GetInt32(r2.GetOrdinal("ChiTietID")),
+                        DonHangID = r2.GetInt32(r2.GetOrdinal("DonHangID")),
+                        LoaiVeID = r2.GetInt32(r2.GetOrdinal("LoaiVeID")),
+                        SoLuong = r2.GetInt32(r2.GetOrdinal("SoLuong")),
+                        DonGia = r2.GetDecimal(r2.GetOrdinal("DonGia")),
+                        ThanhTien = r2.GetDecimal(r2.GetOrdinal("ThanhTien"))
+                    });
+                }
+            }
+
+            return await Task.FromResult(dh);
+        }
+
+        public async Task<Dictionary<string, object>> GetThongKeAsync(int suKienId)
+        {
+            const string sql = @"
+SELECT 
+    COUNT(*) AS TongDonHang,
+    SUM(CASE WHEN TrangThai = 0 THEN 1 ELSE 0 END) AS ChoThanhToan,
+    SUM(CASE WHEN TrangThai = 1 THEN 1 ELSE 0 END) AS DaThanhToan,
+    SUM(CASE WHEN TrangThai = 2 THEN 1 ELSE 0 END) AS DaHuy,
+    SUM(CASE WHEN TrangThai = 1 THEN TongTien ELSE 0 END) AS TongDoanhThu,
+    SUM(TongTien) AS TongGiaTriDonHang
+FROM dbo.DonHang
+WHERE SuKienID = @SuKienID;";
+
+            using var conn = _connectionFactory.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@SuKienID";
+            p.Value = suKienId;
+            cmd.Parameters.Add(p);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                return new Dictionary<string, object>
+                {
+                    ["tongDonHang"] = 0,
+                    ["choThanhToan"] = 0,
+                    ["daThanhToan"] = 0,
+                    ["daHuy"] = 0,
+                    ["tongDoanhThu"] = 0m,
+                    ["tongGiaTriDonHang"] = 0m
+                };
+            }
+
+            return await Task.FromResult(new Dictionary<string, object>
+            {
+                ["tongDonHang"] = reader.GetInt32(reader.GetOrdinal("TongDonHang")),
+                ["choThanhToan"] = reader.GetInt32(reader.GetOrdinal("ChoThanhToan")),
+                ["daThanhToan"] = reader.GetInt32(reader.GetOrdinal("DaThanhToan")),
+                ["daHuy"] = reader.GetInt32(reader.GetOrdinal("DaHuy")),
+                ["tongDoanhThu"] = reader.GetDecimal(reader.GetOrdinal("TongDoanhThu")),
+                ["tongGiaTriDonHang"] = reader.GetDecimal(reader.GetOrdinal("TongGiaTriDonHang"))
+            });
         }
 
         private static DonHang MapDonHang(IDataRecord r)

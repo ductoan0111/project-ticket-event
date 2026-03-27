@@ -1,20 +1,14 @@
-﻿using Models.DTOs.Requests;
-using System;
 using Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Models.DTOs.Requests;
 
-namespace Repositories.Interfaces
+namespace Services.Interfaces
 {
-    public interface IDonHangRepository
+    public interface IDonHangService
     {
         Task<List<DonHang>> GetByNguoiMuaAsync(int nguoiMuaId);
         Task<DonHangDetail?> GetDetailAsync(int donHangId, int nguoiMuaId);
-
-        Task<int> CreateAsync(TaoDonHangRequest req);              // trả DonHangID
-        Task<bool> CancelAsync(int donHangId, int nguoiMuaId);     // đổi trạng thái
+        Task<int> CreateAsync(TaoDonHangRequest req);
+        Task<bool> CancelAsync(int donHangId, int nguoiMuaId);
         
         // Organizer APIs
         Task<List<DonHang>> GetBySuKienIdAsync(int suKienId, byte? trangThai = null);
