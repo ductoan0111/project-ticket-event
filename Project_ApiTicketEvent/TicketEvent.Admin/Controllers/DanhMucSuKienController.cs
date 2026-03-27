@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Repositories.Interfaces;
 using Services.Interfaces;
 
 namespace TicketEvent.Admin.Controllers
@@ -10,19 +9,16 @@ namespace TicketEvent.Admin.Controllers
     [ApiController]
     public class DanhMucSuKienController : ControllerBase
     {
-        private readonly IDanhMucSuKienRepository _repo;
         private readonly IDanhMucSuKienService _service;
 
-        public DanhMucSuKienController(IDanhMucSuKienRepository repo, IDanhMucSuKienService service)
+        public DanhMucSuKienController(IDanhMucSuKienService service)
         {
-            _repo = repo;
             _service = service;
-
         }
         [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
-            var item = _repo.GetById(id);
+            var item = _service.GetById(id);
             if (item == null)
                 return Ok(new { success = false, message = "Không tìm thấy danh mục" });
 
@@ -41,17 +37,18 @@ namespace TicketEvent.Admin.Controllers
 
             return Ok(item);
         }
+
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(new { success = true, data = _repo.GetAllAsync() });
+            var data = await _service.GetAllAsync();
+            return Ok(new { success = true, data });
         }
 
         [HttpPost]
         public IActionResult Create(DanhMucSuKien model)
         {
-            model.TrangThai = true;
-            var id = _repo.Create(model);
+            var id = _service.Create(model);
             return Ok(new { success = true, id });
         }
 
@@ -59,13 +56,13 @@ namespace TicketEvent.Admin.Controllers
         public IActionResult Update(int id, DanhMucSuKien model)
         {
             model.DanhMucID = id;
-            return Ok(new { success = _repo.Update(model) });
+            return Ok(new { success = _service.Update(model) });
         }
 
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
-            return Ok(new { success = _repo.Delete(id) });
+            return Ok(new { success = _service.Delete(id) });
         }
     }
 }

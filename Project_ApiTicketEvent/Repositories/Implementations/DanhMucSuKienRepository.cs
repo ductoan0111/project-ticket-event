@@ -9,7 +9,7 @@ using Models;
 using Repositories.Interfaces;
 namespace Repositories.Implementations
 {
-    public class DanhMucSuKienRepository:IDanhMucSuKienRepository
+    public class DanhMucSuKienRepository : IDanhMucSuKienRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
 
@@ -17,6 +17,7 @@ namespace Repositories.Implementations
         {
             _connectionFactory = connectionFactory;
         }
+
         public DanhMucSuKien? GetById(int id)
         {
             using var conn = _connectionFactory.CreateConnection();
@@ -29,6 +30,7 @@ namespace Repositories.Implementations
             using var reader = cmd.ExecuteReader();
             return reader.Read() ? Map(reader) : null;
         }
+
         public int Create(DanhMucSuKien entity)
         {
             using var conn = _connectionFactory.CreateConnection();
@@ -148,7 +150,7 @@ ORDER BY
 
         public bool Update(DanhMucSuKien entity)
         {
-             using var conn = _connectionFactory.CreateConnection();
+            using var conn = _connectionFactory.CreateConnection();
             conn.Open();
 
             using var cmd = conn.CreateCommand();
