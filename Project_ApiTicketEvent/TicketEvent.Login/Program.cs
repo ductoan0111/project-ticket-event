@@ -57,7 +57,22 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// Thêm CORS để frontend có thể gọi API - CHO PHÉP TẤT CẢ (Development only)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+// Sử dụng CORS - PHẢI ĐẶT TRƯỚC CÁC MIDDLEWARE KHÁC
+app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
 {
@@ -65,7 +80,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Bật lại HTTPS redirect cho IIS Express
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
