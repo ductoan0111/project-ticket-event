@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: response.email,
       soDienThoai: response.soDienThoai,
       vaiTro: response.vaiTro,
+      vaiTroId: response.vaiTroId,
     });
   };
 
