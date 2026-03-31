@@ -15,12 +15,25 @@ namespace TicketEvent.Attendee.Controllers
         {
             _service = service;
         }
+
         // GET: api/sukien
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SuKien>>> GetAll()
         {
             var suKiens = await _service.GetAllAsync();
             return Ok(suKiens);
+        }
+
+        // GET: api/sukien/{id}
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<SuKien>> GetById(int id)
+        {
+            var suKien = await _service.GetByIdAsync(id);
+            if (suKien == null)
+            {
+                return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
+            }
+            return Ok(suKien);
         }
 
         // GET: /api/SuKien/by-name?ten=Concert
@@ -43,6 +56,291 @@ namespace TicketEvent.Attendee.Controllers
 
             var data = await _service.GetByDanhMucNameAsync(tenDanhMuc!);
             return Ok(data);
+        }
+
+        // GET: /api/SuKien/filter - Lọc và tìm kiếm 
+        [HttpGet("filter")]
+        public async Task<IActionResult> Filter(
+            [FromQuery] string? keyword,
+            [FromQuery] int? danhMucId,
+            [FromQuery] int? diaDiemId,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] int? trangThai,
+            [FromQuery] string? sortBy = "ThoiGianBatDau",
+            [FromQuery] string? sortOrder = "asc",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                // Lấy tất cả sự kiện
+                var allSuKiens = await _service.GetAllAsync();
+                var query = allSuKiens.AsQueryable();
+
+                // Filter by keyword (tìm trong tên và mô tả)
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    keyword = keyword.ToLower();
+                    query = query.Where(s =>
+                        s.TenSuKien.ToLower().Contains(keyword) ||
+                        (s.MoTa != null && s.MoTa.ToLower().Contains(keyword))
+                    );
+                }
+
+                // Filter by danh mục
+                if (danhMucId.HasValue && danhMucId.Value > 0)
+                {
+                    query = query.Where(s => s.DanhMucID == danhMucId.Value);
+                }
+
+                // Filter by địa điểm
+                if (diaDiemId.HasValue && diaDiemId.Value > 0)
+                {
+                    query = query.Where(s => s.DiaDiemID == diaDiemId.Value);
+                }
+
+                // Filter by date range
+                if (fromDate.HasValue)
+                {
+                    query = query.Where(s => s.ThoiGianBatDau >= fromDate.Value);
+                }
+
+                if (toDate.HasValue)
+                {
+                    query = query.Where(s => s.ThoiGianBatDau <= toDate.Value);
+                }
+
+                // Filter by trạng thái
+                if (trangThai.HasValue)
+                {
+                    query = query.Where(s => s.TrangThai == trangThai.Value);
+                }
+
+                // Sorting
+                query = sortBy?.ToLower() switch
+                {
+                    "tensukien" => sortOrder?.ToLower() == "desc"
+                        ? query.OrderByDescending(s => s.TenSuKien)
+                        : query.OrderBy(s => s.TenSuKien),
+                    "thoigianketthuc" => sortOrder?.ToLower() == "desc"
+                        ? query.OrderByDescending(s => s.ThoiGianKetThuc)
+                        : query.OrderBy(s => s.ThoiGianKetThuc),
+                    "ngaytao" => sortOrder?.ToLower() == "desc"
+                        ? query.OrderByDescending(s => s.NgayTao)
+                        : query.OrderBy(s => s.NgayTao),
+                    _ => sortOrder?.ToLower() == "desc"
+                        ? query.OrderByDescending(s => s.ThoiGianBatDau)
+                        : query.OrderBy(s => s.ThoiGianBatDau)
+                };
+
+                // Count total before pagination
+                var totalItems = query.Count();
+                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+                // Pagination
+                var items = query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = items,
+                    pagination = new
+                    {
+                        currentPage = page,
+                        pageSize,
+                        totalItems,
+                        totalPages,
+                        hasNextPage = page < totalPages,
+                        hasPreviousPage = page > 1
+                    },
+                    filters = new
+                    {
+                        keyword,
+                        danhMucId,
+                        diaDiemId,
+                        fromDate,
+                        toDate,
+                        minPrice,
+                        maxPrice,
+                        trangThai,
+                        sortBy,
+                        sortOrder
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi lọc sự kiện",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // GET: /api/SuKien/upcoming - Sự kiện sắp diễn ra
+        [HttpGet("upcoming")]
+        public async Task<IActionResult> GetUpcoming([FromQuery] int limit = 10)
+        {
+            try
+            {
+                if (limit < 1 || limit > 50) limit = 10;
+
+                var allSuKiens = await _service.GetAllAsync();
+                var upcomingEvents = allSuKiens
+                    .Where(s => s.ThoiGianBatDau > DateTime.Now && s.TrangThai == 1) // Đã duyệt
+                    .OrderBy(s => s.ThoiGianBatDau)
+                    .Take(limit)
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    count = upcomingEvents.Count,
+                    data = upcomingEvents
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi lấy sự kiện sắp diễn ra",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // GET: /api/SuKien/popular - Sự kiện phổ biến
+        [HttpGet("popular")]
+        public async Task<IActionResult> GetPopular([FromQuery] int limit = 10)
+        {
+            try
+            {
+                if (limit < 1 || limit > 50) limit = 10;
+
+                var allSuKiens = await _service.GetAllAsync();
+                
+                // TODO: Sắp xếp theo số lượng vé đã bán (cần join với Ve hoặc DonHang)
+                // Tạm thời sắp xếp theo ngày tạo mới nhất
+                var popularEvents = allSuKiens
+                    .Where(s => s.TrangThai == 1 || s.TrangThai == 2) // Đã duyệt hoặc đang diễn ra
+                    .OrderByDescending(s => s.NgayTao)
+                    .Take(limit)
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    count = popularEvents.Count,
+                    data = popularEvents,
+                    note = "Hiện tại sắp xếp theo ngày tạo. Cần implement logic dựa trên số vé bán được."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi lấy sự kiện phổ biến",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // GET: /api/SuKien/search - Tìm kiếm toàn văn
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] int limit = 20)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(q))
+                    return BadRequest(new { message = "Thiếu từ khóa tìm kiếm (q)" });
+
+                if (limit < 1 || limit > 100) limit = 20;
+
+                q = q.ToLower();
+                var allSuKiens = await _service.GetAllAsync();
+
+                var results = allSuKiens
+                    .Where(s =>
+                        s.TenSuKien.ToLower().Contains(q) ||
+                        (s.MoTa != null && s.MoTa.ToLower().Contains(q))
+                    )
+                    .Take(limit)
+                    .Select(s => new
+                    {
+                        s.SuKienID,
+                        s.TenSuKien,
+                        s.MoTa,
+                        s.ThoiGianBatDau,
+                        s.ThoiGianKetThuc,
+                        s.DiaDiemID,
+                        s.DanhMucID,
+                        s.TrangThai,
+                        relevance = CalculateRelevance(s, q)
+                    })
+                    .OrderByDescending(s => s.relevance)
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    query = q,
+                    count = results.Count,
+                    data = results
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi tìm kiếm",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // Helper method để tính độ liên quan
+        private int CalculateRelevance(SuKien suKien, string keyword)
+        {
+            int score = 0;
+            keyword = keyword.ToLower();
+
+            // Tên sự kiện chứa từ khóa
+            if (suKien.TenSuKien.ToLower().Contains(keyword))
+            {
+                score += 10;
+                // Bonus nếu từ khóa ở đầu tên
+                if (suKien.TenSuKien.ToLower().StartsWith(keyword))
+                    score += 5;
+            }
+
+            // Mô tả chứa từ khóa
+            if (suKien.MoTa != null && suKien.MoTa.ToLower().Contains(keyword))
+                score += 3;
+
+            // Bonus cho sự kiện sắp diễn ra
+            if (suKien.ThoiGianBatDau > DateTime.Now)
+                score += 2;
+
+            // Bonus cho sự kiện đã duyệt
+            if (suKien.TrangThai == 1)
+                score += 1;
+
+            return score;
         }
     }
 }
