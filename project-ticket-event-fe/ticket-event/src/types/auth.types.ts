@@ -23,6 +23,7 @@ export interface LoginResponse {
   email: string;
   soDienThoai?: string;
   vaiTro?: string;
+  vaiTroId?: number;
 }
 
 export interface User {
@@ -31,4 +32,5 @@ export interface User {
   email: string;
   soDienThoai?: string;
   vaiTro?: string;
+  vaiTroId?: number;
 }
