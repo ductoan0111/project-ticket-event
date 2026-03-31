@@ -24,6 +24,9 @@ const Login = () => {
 
     try {
       await login(formData);
+      // Redirect based on role after successful login
+      // Note: We'll navigate after the user state is updated
+      // For now, redirect to home and let the Home component handle routing
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');

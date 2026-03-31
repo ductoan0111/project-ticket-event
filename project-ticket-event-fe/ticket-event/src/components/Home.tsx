@@ -1,11 +1,19 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Ticket, LogOut, User, Mail, Phone, Shield, Calendar, TrendingUp } from 'lucide-react';
 import './Home.css';
 
 const Home = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect attendees to their home page
+  useEffect(() => {
+    if (isAuthenticated && user?.vaiTroId === 3) {
+      navigate('/attendee');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleLogout = () => {
     logout();
