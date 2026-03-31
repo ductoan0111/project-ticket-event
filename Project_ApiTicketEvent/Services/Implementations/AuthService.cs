@@ -82,7 +82,8 @@ namespace Services.Implementations
                 TenDangNhap = user.TenDangNhap ?? "",
                 Email = user.Email ?? "",
                 SoDienThoai = user.SoDienThoai,
-                VaiTro = roleCode
+                VaiTro = roleCode,
+                VaiTroId = user.VaiTroId
             };
         }
 
@@ -182,7 +183,8 @@ namespace Services.Implementations
                 TenDangNhap = user.TenDangNhap ?? "",
                 Email = user.Email ?? "",
                 SoDienThoai = user.SoDienThoai,
-                VaiTro = roleCode
+                VaiTro = roleCode,
+                VaiTroId = user.VaiTroId
             };
         }
 
