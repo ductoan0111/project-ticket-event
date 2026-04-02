@@ -532,10 +532,38 @@ const AttendeeHome = () => {
 
       {/* Footer */}
       <footer className="home-footer">
+        <div className="footer-glow footer-glow-1"></div>
+        <div className="footer-glow footer-glow-2"></div>
+
         <div className="footer-content">
-          <div className="footer-section">
-            <h3>TicketEvent</h3>
-            <p>Nền tảng đặt vé sự kiện hàng đầu Việt Nam. Khám phá và trải nghiệm những sự kiện tuyệt vời cùng chúng tôi!</p>
+          <div className="footer-section footer-brand">
+            <div className="footer-brand-top">
+              <div className="footer-brand-logo">
+                <Ticket size={26} />
+              </div>
+              <div>
+                <h3>TicketEvent</h3>
+                <span className="footer-brand-tagline">
+                  Nền tảng khám phá sự kiện & đặt vé hiện đại
+                </span>
+              </div>
+            </div>
+
+            <div className="footer-contact-list">
+              <div className="footer-contact-item">
+                <MapPin size={16} />
+                <span>Trụ sở: 123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</span>
+              </div>
+              <div className="footer-contact-item">
+                <Bell size={16} />
+                <span>Hỗ trợ khách hàng: 08:00 - 22:00 mỗi ngày</span>
+              </div>
+              <div className="footer-contact-item">
+                <Ticket size={16} />
+                <span>Đặt vé nhanh - xác nhận tức thì - quản lý vé dễ dàng</span>
+              </div>
+            </div>
+
             <div className="social-links">
               <a href="#" aria-label="Facebook">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -559,30 +587,54 @@ const AttendeeHome = () => {
               </a>
             </div>
           </div>
+
           <div className="footer-section">
-            <h4>Về chúng tôi</h4>
-            <a href="#">Giới thiệu</a>
-            <a href="#">Liên hệ</a>
-            <a href="#">Tuyển dụng</a>
-            <a href="#">Đối tác</a>
+            <h4>Khám phá</h4>
+            <a href="#">Sự kiện nổi bật</a>
+            <a href="#">Sự kiện sắp diễn ra</a>
+            <a href="#">Danh mục sự kiện</a>
+            <a href="#">Ưu đãi & mã giảm giá</a>
+            <a href="#">Sự kiện gần bạn</a>
           </div>
+
           <div className="footer-section">
-            <h4>Hỗ trợ</h4>
+            <h4>Dành cho người dùng</h4>
+            <a href="#">Tài khoản của tôi</a>
+            <a href="#">Vé của tôi</a>
+            <a href="#">Lịch sử đơn hàng</a>
+            <a href="#">Sự kiện yêu thích</a>
+            <a href="#">Thông báo hệ thống</a>
+          </div>
+
+          <div className="footer-section">
+            <h4>Hỗ trợ & chính sách</h4>
+            <a href="#">Trung tâm hỗ trợ</a>
             <a href="#">Câu hỏi thường gặp</a>
             <a href="#">Chính sách bảo mật</a>
             <a href="#">Điều khoản sử dụng</a>
-            <a href="#">Hướng dẫn đặt vé</a>
+            <a href="#">Chính sách hoàn vé</a>
           </div>
-          <div className="footer-section">
-            <h4>Liên hệ</h4>
-            <a href="mailto:support@ticketevent.vn">support@ticketevent.vn</a>
-            <a href="tel:1900xxxx">Hotline: 1900 xxxx</a>
-            <a href="#">Địa chỉ: TP. Hồ Chí Minh</a>
+
+          <div className="footer-section footer-subscribe">
+            <h4>Nhận thông tin mới</h4>
+            <p className="footer-subscribe-text">
+              Đăng ký email để nhận thông báo về sự kiện hot, chương trình giảm giá
+              và ưu đãi độc quyền mỗi tuần.
+            </p>
+
+            <form className="footer-subscribe-form">
+              <input
+                type="email"
+                placeholder="Nhập email của bạn"
+                className="footer-input"
+              />
+              <button type="submit" className="footer-subscribe-btn">
+                Đăng ký
+              </button>
+            </form>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>2024 TicketEvent. All rights reserved.</p>
-        </div>
+
       </footer>
     </div>
   );
