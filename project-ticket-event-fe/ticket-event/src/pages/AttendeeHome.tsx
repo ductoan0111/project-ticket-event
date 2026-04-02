@@ -55,15 +55,15 @@ const AttendeeHome = () => {
     try {
       setLoading(true);
       
-      // Fetch upcoming events
-      const upcomingRes = await fetch('https://localhost:44310/api/SuKien/upcoming?limit=6');
+      // Fetch upcoming events - Hiển thị 9 sự kiện (3 hàng x 3 cột)
+      const upcomingRes = await fetch('https://localhost:44310/api/SuKien/upcoming?limit=9');
       if (upcomingRes.ok) {
         const upcomingData = await upcomingRes.json();
         setUpcomingEvents(upcomingData.data || []);
       }
 
-      // Fetch popular events
-      const popularRes = await fetch('https://localhost:44310/api/SuKien/popular?limit=6');
+      // Fetch popular events - Hiển thị 9 sự kiện
+      const popularRes = await fetch('https://localhost:44310/api/SuKien/popular?limit=9');
       if (popularRes.ok) {
         const popularData = await popularRes.json();
         setPopularEvents(popularData.data || []);
