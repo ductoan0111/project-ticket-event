@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services.Interfaces;
@@ -10,10 +10,12 @@ namespace TicketEvent.Attendee.Controllers
     public class SuKienController : ControllerBase
     {
         private readonly ISuKienService _service;
+        private readonly ILoaiVeService _loaiVeService;
 
-        public SuKienController(ISuKienService service)
+        public SuKienController(ISuKienService service, ILoaiVeService loaiVeService)
         {
             _service = service;
+            _loaiVeService = loaiVeService;
         }
 
         // GET: api/sukien
@@ -217,6 +219,101 @@ namespace TicketEvent.Attendee.Controllers
                 {
                     success = false,
                     message = "Lỗi khi lấy sự kiện sắp diễn ra",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // GET: /api/SuKien/{id}/detail - Chi tiết sự kiện kèm danh sách loại vé
+        // Đây là endpoint chính cho trang chi tiết sự kiện
+        [HttpGet("{id:int}/detail")]
+        public async Task<IActionResult> GetDetail([FromRoute] int id)
+        {
+            try
+            {
+                var suKien = await _service.GetByIdAsync(id);
+                if (suKien == null)
+                    return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
+
+                // Lấy tất cả loại vé của sự kiện này
+                var loaiVes = await _loaiVeService.GetBySuKienIdAsync(id, trangThai: null);
+
+                var now = DateTime.Now;
+                var loaiVeData = loaiVes.Select(lv =>
+                {
+                    int soLuongCon = lv.SoLuongToiDa - lv.SoLuongDaBan;
+                    bool dangMoBan = lv.TrangThai
+                        && (!lv.ThoiGianMoBan.HasValue || lv.ThoiGianMoBan.Value <= now)
+                        && (!lv.ThoiGianDongBan.HasValue || lv.ThoiGianDongBan.Value >= now);
+
+                    string trangThaiMoBan =
+                        !lv.TrangThai ? "Ngừng bán" :
+                        lv.ThoiGianMoBan.HasValue && lv.ThoiGianMoBan.Value > now ? "Chưa mở bán" :
+                        lv.ThoiGianDongBan.HasValue && lv.ThoiGianDongBan.Value < now ? "Đã kết thúc" :
+                        soLuongCon <= 0 ? "Hết vé" : "Đang mở bán";
+
+                    return new
+                    {
+                        lv.LoaiVeID,
+                        lv.SuKienID,
+                        lv.TenLoaiVe,
+                        lv.MoTa,
+                        lv.DonGia,
+                        lv.SoLuongToiDa,
+                        lv.SoLuongDaBan,
+                        SoLuongCon = soLuongCon,
+                        lv.GioiHanMoiKhach,
+                        lv.ThoiGianMoBan,
+                        lv.ThoiGianDongBan,
+                        lv.TrangThai,
+                        ConVe = soLuongCon > 0,
+                        DangMoBan = dangMoBan,
+                        TrangThaiMoBan = trangThaiMoBan,
+                        PhanTramDaBan = lv.SoLuongToiDa > 0
+                            ? Math.Round((double)lv.SoLuongDaBan / lv.SoLuongToiDa * 100, 1)
+                            : 0.0
+                    };
+                }).ToList();
+
+                // Tính giá thấp nhất / cao nhất từ loại vé đang mở bán
+                var veConBan = loaiVeData.Where(v => v.DangMoBan && v.ConVe).ToList();
+                decimal giaThapNhat = veConBan.Any() ? veConBan.Min(v => v.DonGia) : 0;
+                decimal giaCaoNhat = loaiVeData.Any() ? loaiVeData.Max(v => v.DonGia) : 0;
+                int tongVeConLai = loaiVeData.Sum(v => v.SoLuongCon);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        // Thông tin sự kiện
+                        suKien.SuKienID,
+                        suKien.TenSuKien,
+                        suKien.MoTa,
+                        suKien.ThoiGianBatDau,
+                        suKien.ThoiGianKetThuc,
+                        suKien.AnhBiaUrl,
+                        suKien.TrangThai,
+                        suKien.DanhMucID,
+                        suKien.DiaDiemID,
+                        suKien.ToChucID,
+                        suKien.NgayTao,
+                        // Danh sách loại vé
+                        LoaiVes = loaiVeData,
+                        // Tổng hợp
+                        GiaThapNhat = giaThapNhat,
+                        GiaCaoNhat = giaCaoNhat,
+                        TongVeConLai = tongVeConLai,
+                        ConVe = tongVeConLai > 0
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi lấy chi tiết sự kiện",
                     error = ex.Message
                 });
             }
