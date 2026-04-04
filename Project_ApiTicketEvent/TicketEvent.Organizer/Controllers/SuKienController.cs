@@ -24,6 +24,24 @@ namespace TicketEvent.Organizer.Controllers
             return Ok(suKiens);
         }
 
+        // GET: api/sukien/my-events?status=0
+        // Lấy sự kiện của Organizer theo trạng thái
+        [HttpGet("my-events")]
+        public async Task<ActionResult<IEnumerable<SuKien>>> GetMyEvents([FromQuery] byte? status)
+        {
+            var allEvents = await _service.GetAllAsync();
+            
+            // TODO: Lọc theo ToChucID của user đang đăng nhập
+            // Hiện tại trả về tất cả, sau này cần thêm authentication
+            
+            if (status.HasValue)
+            {
+                allEvents = allEvents.Where(e => e.TrangThai == status.Value);
+            }
+            
+            return Ok(allEvents);
+        }
+
         // GET: api/sukien/5
         [HttpGet("{id}")]
         public async Task<ActionResult<SuKien>> GetById(int id)
@@ -53,13 +71,21 @@ namespace TicketEvent.Organizer.Controllers
                 return BadRequest(new { message = "Thời gian kết thúc phải sau thời gian bắt đầu" });
             }
 
+            // QUAN TRỌNG: Tự động set trạng thái = 0 (Chờ duyệt)
+            // Organizer không thể tự duyệt sự kiện, phải chờ Admin duyệt
+            suKien.TrangThai = 0;
+            
             // Set ngày tạo
             suKien.NgayTao = DateTime.Now;
 
             var newId = await _service.CreateAsync(suKien);
             suKien.SuKienID = newId;
 
-            return CreatedAtAction(nameof(GetById), new { id = newId }, suKien);
+            return CreatedAtAction(nameof(GetById), new { id = newId }, new 
+            { 
+                suKien,
+                message = "Tạo sự kiện thành công. Sự kiện đang chờ Admin duyệt."
+            });
         }
 
         // PUT: api/sukien/5
@@ -81,6 +107,24 @@ namespace TicketEvent.Organizer.Controllers
             if (existingSuKien == null)
             {
                 return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
+            }
+
+            // QUAN TRỌNG: Organizer không được phép thay đổi trạng thái
+            // Chỉ Admin mới có quyền duyệt (TrangThai = 1)
+            if (suKien.TrangThai != existingSuKien.TrangThai)
+            {
+                return Forbid("Bạn không có quyền thay đổi trạng thái sự kiện. Chỉ Admin mới có quyền duyệt.");
+            }
+
+            // Không cho phép sửa sự kiện đã được duyệt (TrangThai = 1) hoặc đã kết thúc
+            if (existingSuKien.TrangThai == 1)
+            {
+                return BadRequest(new { message = "Không thể sửa sự kiện đã được duyệt. Vui lòng liên hệ Admin." });
+            }
+
+            if (existingSuKien.TrangThai >= 2)
+            {
+                return BadRequest(new { message = "Không thể sửa sự kiện đã kết thúc hoặc đã hủy." });
             }
 
             // Validate thời gian
