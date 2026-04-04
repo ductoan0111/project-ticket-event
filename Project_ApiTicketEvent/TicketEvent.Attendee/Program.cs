@@ -23,6 +23,8 @@ builder.Services.AddScoped<ILoaiVeRepository, LoaiVeRepository>();
 builder.Services.AddScoped<IThanhToanRepository, ThanhToanRepository>();
 builder.Services.AddScoped<IVeRepository, VeRepository>();
 builder.Services.AddScoped<IThongBaoRepository, ThongBaoRepository>();
+builder.Services.AddScoped<INguoiDungRepository, NguoiDungRepository>();
+builder.Services.AddScoped<ISuKienYeuThichRepository, SuKienYeuThichRepository>();
 
 // Services
 builder.Services.AddScoped<IDanhMucSuKienService, DanhMucSuKienService>();
@@ -33,6 +35,8 @@ builder.Services.AddScoped<ILoaiVeService, LoaiVeService>();
 builder.Services.AddScoped<IThanhToanService, ThanhToanService>();
 builder.Services.AddScoped<IVeService, VeService>();
 builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
+builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
+builder.Services.AddScoped<ISuKienYeuThichService, SuKienYeuThichService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;
