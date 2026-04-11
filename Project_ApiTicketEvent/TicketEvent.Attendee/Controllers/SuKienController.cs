@@ -11,11 +11,16 @@ namespace TicketEvent.Attendee.Controllers
     {
         private readonly ISuKienService _service;
         private readonly ILoaiVeService _loaiVeService;
+        private readonly IDiaDiemService _diaDiemService;
+        private readonly IDanhMucSuKienService _danhMucService;
 
-        public SuKienController(ISuKienService service, ILoaiVeService loaiVeService)
+        public SuKienController(ISuKienService service, ILoaiVeService loaiVeService,
+            IDiaDiemService diaDiemService, IDanhMucSuKienService danhMucService)
         {
             _service = service;
             _loaiVeService = loaiVeService;
+            _diaDiemService = diaDiemService;
+            _danhMucService = danhMucService;
         }
 
         // GET: api/sukien
@@ -206,11 +211,54 @@ namespace TicketEvent.Attendee.Controllers
                     .Take(limit)
                     .ToList();
 
+                // Lấy giá thấp nhất + tên địa điểm + tên danh mục cho từng sự kiện
+                var eventData = new List<object>();
+
+                // Load tất cả địa điểm và danh mục một lần (tránh N+1)
+                var allLocations = await _diaDiemService.GetAllAsync();
+                var allCategories = await _danhMucService.GetAllAsync();
+                var locationMap = allLocations.ToDictionary(d => d.DiaDiemID, d => d.TenDiaDiem);
+                var categoryMap = allCategories.ToDictionary(d => d.DanhMucID, d => d.TenDanhMuc);
+
+                foreach (var sk in upcomingEvents)
+                {
+                    var loaiVes = await _loaiVeService.GetBySuKienIdAsync(sk.SuKienID, trangThai: true);
+                    var now = DateTime.Now;
+                    var veConBan = loaiVes.Where(lv =>
+                        lv.TrangThai &&
+                        (!lv.ThoiGianMoBan.HasValue || lv.ThoiGianMoBan.Value <= now) &&
+                        (!lv.ThoiGianDongBan.HasValue || lv.ThoiGianDongBan.Value >= now) &&
+                        (lv.SoLuongToiDa - lv.SoLuongDaBan) > 0
+                    ).ToList();
+                    decimal giaThapNhat = veConBan.Any() ? veConBan.Min(v => v.DonGia) : 0;
+
+                    string tenDiaDiem = sk.DiaDiemID > 0 && locationMap.TryGetValue(sk.DiaDiemID, out var loc) ? loc ?? "" : "";
+                    string tenDanhMuc = categoryMap.TryGetValue(sk.DanhMucID, out var cat) ? cat ?? "" : "";
+
+                    eventData.Add(new
+                    {
+                        sk.SuKienID,
+                        sk.DanhMucID,
+                        sk.DiaDiemID,
+                        sk.ToChucID,
+                        sk.TenSuKien,
+                        sk.MoTa,
+                        sk.ThoiGianBatDau,
+                        sk.ThoiGianKetThuc,
+                        sk.AnhBiaUrl,
+                        sk.TrangThai,
+                        sk.NgayTao,
+                        TenDiaDiem = tenDiaDiem,
+                        TenDanhMuc = tenDanhMuc,
+                        GiaThapNhat = giaThapNhat
+                    });
+                }
+
                 return Ok(new
                 {
                     success = true,
-                    count = upcomingEvents.Count,
-                    data = upcomingEvents
+                    count = eventData.Count,
+                    data = eventData
                 });
             }
             catch (Exception ex)
@@ -328,21 +376,73 @@ namespace TicketEvent.Attendee.Controllers
                 if (limit < 1 || limit > 50) limit = 10;
 
                 var allSuKiens = await _service.GetAllAsync();
-                
-                // TODO: Sắp xếp theo số lượng vé đã bán (cần join với Ve hoặc DonHang)
-                // Tạm thời sắp xếp theo ngày tạo mới nhất
-                var popularEvents = allSuKiens
+
+                // Sắp xếp theo số lượng vé đã bán (tổng SoLuongDaBan)
+                var popularEventsBase = allSuKiens
                     .Where(s => s.TrangThai == 1 || s.TrangThai == 2) // Đã duyệt hoặc đang diễn ra
-                    .OrderByDescending(s => s.NgayTao)
+                    .Take(limit * 3) // Lấy nhiều hơn để sort
+                    .ToList();
+
+                // Lấy giá thấp nhất và tổng vé bán cho từng sự kiện
+                var eventDataList = new List<(object data, int totalSold)>();
+
+                // Load địa điểm và danh mục một lần
+                var allLocations2 = await _diaDiemService.GetAllAsync();
+                var allCategories2 = await _danhMucService.GetAllAsync();
+                var locationMap2 = allLocations2.ToDictionary(d => d.DiaDiemID, d => d.TenDiaDiem);
+                var categoryMap2 = allCategories2.ToDictionary(d => d.DanhMucID, d => d.TenDanhMuc);
+
+                foreach (var sk in popularEventsBase)
+                {
+                    var loaiVes = await _loaiVeService.GetBySuKienIdAsync(sk.SuKienID, trangThai: null);
+                    int totalSold = loaiVes.Sum(lv => lv.SoLuongDaBan);
+
+                    var now = DateTime.Now;
+                    var veConBan = loaiVes.Where(lv =>
+                        lv.TrangThai &&
+                        (!lv.ThoiGianMoBan.HasValue || lv.ThoiGianMoBan.Value <= now) &&
+                        (!lv.ThoiGianDongBan.HasValue || lv.ThoiGianDongBan.Value >= now) &&
+                        (lv.SoLuongToiDa - lv.SoLuongDaBan) > 0
+                    ).ToList();
+                    decimal giaThapNhat = veConBan.Any() ? veConBan.Min(v => v.DonGia) : 0;
+
+                    string tenDiaDiem2 = sk.DiaDiemID > 0 && locationMap2.TryGetValue(sk.DiaDiemID, out var loc2) ? loc2 ?? "" : "";
+                    string tenDanhMuc2 = categoryMap2.TryGetValue(sk.DanhMucID, out var cat2) ? cat2 ?? "" : "";
+
+                    var item = new
+                    {
+                        sk.SuKienID,
+                        sk.DanhMucID,
+                        sk.DiaDiemID,
+                        sk.ToChucID,
+                        sk.TenSuKien,
+                        sk.MoTa,
+                        sk.ThoiGianBatDau,
+                        sk.ThoiGianKetThuc,
+                        sk.AnhBiaUrl,
+                        sk.TrangThai,
+                        sk.NgayTao,
+                        TenDiaDiem = tenDiaDiem2,
+                        TenDanhMuc = tenDanhMuc2,
+                        GiaThapNhat = giaThapNhat
+                    };
+
+                    eventDataList.Add((item, totalSold));
+                }
+
+                // Sắp xếp theo tổng vé bán được, lấy top N
+                var sortedData = eventDataList
+                    .OrderByDescending(x => x.totalSold)
+                    .ThenByDescending(x => ((dynamic)x.data).NgayTao)
                     .Take(limit)
+                    .Select(x => x.data)
                     .ToList();
 
                 return Ok(new
                 {
                     success = true,
-                    count = popularEvents.Count,
-                    data = popularEvents,
-                    note = "Hiện tại sắp xếp theo ngày tạo. Cần implement logic dựa trên số vé bán được."
+                    count = sortedData.Count,
+                    data = sortedData
                 });
             }
             catch (Exception ex)
