@@ -1,67 +1,38 @@
 import type { LoginRequest, RegisterRequest, LoginResponse } from '../types/auth.types';
-import { API_ENDPOINTS } from './api';
+import api from './api';
+
+const LOGIN_API_URL = import.meta.env.VITE_API_URL || 'https://localhost:44368/api';
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      console.log('Calling login API:', API_ENDPOINTS.LOGIN);
+      console.log('Calling login API:', `${LOGIN_API_URL}/Auth/login`);
       console.log('Credentials:', credentials);
       
-      const response = await fetch(API_ENDPOINTS.LOGIN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Đăng nhập thất bại' }));
-        throw new Error(error.message || 'Đăng nhập thất bại');
-      }
-
-      const data = await response.json();
-      console.log('Login success:', data);
-      this.setTokens(data.accessToken, data.refreshToken);
-      return data;
-    } catch (error) {
+      const response = await api.post<LoginResponse>(`${LOGIN_API_URL}/Auth/login`, credentials);
+      
+      console.log('Login success:', response.data);
+      this.setTokens(response.data.accessToken, response.data.refreshToken);
+      return response.data;
+    } catch (error: any) {
       console.error('Login error:', error);
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra backend có đang chạy không.');
-      }
-      throw error;
+      const message = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+      throw new Error(message);
     }
   }
 
   async register(userData: RegisterRequest): Promise<void> {
     try {
-      console.log('Calling register API:', API_ENDPOINTS.REGISTER);
+      console.log('Calling register API:', `${LOGIN_API_URL}/Auth/register`);
       console.log('User data:', userData);
       
-      const response = await fetch(API_ENDPOINTS.REGISTER, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Đăng ký thất bại' }));
-        throw new Error(error.message || 'Đăng ký thất bại');
-      }
-
+      await api.post(`${LOGIN_API_URL}/Auth/register`, userData);
+      
       console.log('Register success');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Register error:', error);
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra backend có đang chạy không.');
-      }
-      throw error;
+      const message = error.response?.data?.message || error.message || 'Đăng ký thất bại';
+      throw new Error(message);
     }
   }
 
