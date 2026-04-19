@@ -329,6 +329,15 @@ namespace TicketEvent.Attendee.Controllers
                 decimal giaCaoNhat = loaiVeData.Any() ? loaiVeData.Max(v => v.DonGia) : 0;
                 int tongVeConLai = loaiVeData.Sum(v => v.SoLuongCon);
 
+                // Lấy tên địa điểm và danh mục
+                var allLocations = await _diaDiemService.GetAllAsync();
+                var allCategories = await _danhMucService.GetAllAsync();
+                var locationMap = allLocations.ToDictionary(d => d.DiaDiemID, d => d.TenDiaDiem);
+                var categoryMap = allCategories.ToDictionary(d => d.DanhMucID, d => d.TenDanhMuc);
+
+                string tenDiaDiem = suKien.DiaDiemID > 0 && locationMap.TryGetValue(suKien.DiaDiemID, out var loc) ? loc ?? "" : "";
+                string tenDanhMuc = categoryMap.TryGetValue(suKien.DanhMucID, out var cat) ? cat ?? "" : "";
+
                 return Ok(new
                 {
                     success = true,
@@ -346,6 +355,9 @@ namespace TicketEvent.Attendee.Controllers
                         suKien.DiaDiemID,
                         suKien.ToChucID,
                         suKien.NgayTao,
+                        // Đã join tên
+                        TenDiaDiem = tenDiaDiem,
+                        TenDanhMuc = tenDanhMuc,
                         // Danh sách loại vé
                         LoaiVes = loaiVeData,
                         // Tổng hợp
@@ -366,6 +378,7 @@ namespace TicketEvent.Attendee.Controllers
                 });
             }
         }
+
 
         // GET: /api/SuKien/popular - Sự kiện phổ biến
         [HttpGet("popular")]

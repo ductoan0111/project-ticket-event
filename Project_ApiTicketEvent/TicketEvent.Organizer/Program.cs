@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,6 +23,8 @@ builder.Services.AddScoped<IVeRepository, VeRepository>();
 builder.Services.AddScoped<IDonHangRepository, DonHangRepository>();
 builder.Services.AddScoped<IBaoCaoRepository, BaoCaoRepository>();
 builder.Services.AddScoped<IThongBaoRepository, ThongBaoRepository>();
+builder.Services.AddScoped<IDanhMucSuKienRepository, DanhMucSuKienRepository>();
+builder.Services.AddScoped<IDiaDiemReponsitory, DiaDiemReponsitory>();
 
 // Services
 builder.Services.AddScoped<ISuKienService, SuKienService>();
@@ -32,6 +34,8 @@ builder.Services.AddScoped<IVeService, VeService>();
 builder.Services.AddScoped<IDonHangService, DonHangService>();
 builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
 builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
+builder.Services.AddScoped<IDanhMucSuKienService, DanhMucSuKienService>();
+builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;
@@ -62,6 +66,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -72,6 +87,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use CORS
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

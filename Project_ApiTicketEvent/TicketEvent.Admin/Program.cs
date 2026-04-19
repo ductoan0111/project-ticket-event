@@ -16,6 +16,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Repositories
 builder.Services.AddScoped<IDanhMucSuKienRepository, DanhMucSuKienRepository>();
 builder.Services.AddScoped<IDiaDiemReponsitory, DiaDiemReponsitory>();
@@ -59,6 +70,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
