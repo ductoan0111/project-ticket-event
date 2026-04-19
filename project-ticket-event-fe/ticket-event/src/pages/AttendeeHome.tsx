@@ -325,13 +325,10 @@ const AttendeeHome = () => {
             <NavLink to="/attendee" className={({ isActive }) => `ah-nav-link ${isActive ? 'active' : ''}`}>
               Trang chủ
             </NavLink>
-            <NavLink to="/events" className={({ isActive }) => `ah-nav-link ${isActive ? 'active' : ''}`}>
-              Sự kiện
-            </NavLink>
             <NavLink to="/my-tickets" className={({ isActive }) => `ah-nav-link ${isActive ? 'active' : ''}`}>
               Vé của tôi
             </NavLink>
-            <NavLink to="/orders" className={({ isActive }) => `ah-nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/my-orders" className={({ isActive }) => `ah-nav-link ${isActive ? 'active' : ''}`}>
               Đơn hàng
             </NavLink>
           </nav>

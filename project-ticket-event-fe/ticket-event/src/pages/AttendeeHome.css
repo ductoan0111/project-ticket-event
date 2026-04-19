@@ -732,9 +732,12 @@
   display: flex; align-items: center; justify-content: space-between;
 }
 .event-cat-pill {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700;
-  color: var(--cat-color, #6366f1);
+  display: flex; 
+  align-items: center; 
+  gap: 5px;
+  font-size: 11px; 
+  font-weight: 700;
+  color: var(--cat-color, #6366f1) !important;
   background: color-mix(in srgb, var(--cat-color, #6366f1) 10%, transparent);
   padding: 4px 10px;
   border-radius: 6px;
@@ -746,30 +749,30 @@
 }
 
 .event-title {
-  font-size: 17px; font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: none;
 }
 .event-desc {
-  font-size: 13px; color: #64748b;
-  margin: 0; line-height: 1.6;
+  font-size: 13px; 
+  color: #64748b !important;
+  margin: 0; 
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-shadow: none;
 }
 
 .event-meta-list {
   display: flex; flex-direction: column; gap: 6px;
 }
 .event-meta-item {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 13px; color: #64748b; font-weight: 500;
+  display: flex; 
+  align-items: center; 
+  gap: 7px;
+  font-size: 13px; 
+  color: #475569 !important; 
+  font-weight: 600;
 }
 .event-meta-item svg { color: #6366f1; flex-shrink: 0; }
 .meta-time {
@@ -787,9 +790,9 @@
   margin-top: auto;
 }
 .price-cell {
-  display: flex; align-items: baseline; gap: 4px;
+  display: none;
 }
-.price-from { font-size: 11px; color: #94a3b8; }
+.price-from { display: none; }
 .price-val {
   font-size: 16px; font-weight: 800;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);

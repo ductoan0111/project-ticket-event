@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { User, LoginRequest, RegisterRequest } from '../types/auth.types';
+import type { User, LoginRequest, RegisterRequest, LoginResponse } from '../types/auth.types';
 import authService from '../services/auth.service';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<LoginResponse>;
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -29,9 +29,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = async (credentials: LoginRequest) => {
+  const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await authService.login(credentials);
     setUser({
+      nguoiDungId: response.nguoiDungId,
       hoTen: response.hoTen,
       tenDangNhap: response.tenDangNhap,
       email: response.email,
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       vaiTro: response.vaiTro,
       vaiTroId: response.vaiTroId,
     });
+    return response; // Return response for redirect logic
   };
 
   const register = async (userData: RegisterRequest) => {

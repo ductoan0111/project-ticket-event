@@ -1,41 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Calendar, Clock, Ticket, Heart, Share2, 
+import {
+  Calendar, Clock, MapPin, Ticket, Heart, Share2,
   ArrowLeft, Users, AlertCircle, CheckCircle,
-  X, ShoppingCart
+  X, ShoppingCart, Tag, Info, ExternalLink
 } from 'lucide-react';
 import eventService from '../services/event.service';
 import favoriteService from '../services/favorite.service';
+import { ticketTypeService } from '../services/ticketType.service';
+import { useAuth } from '../context/AuthContext';
 import type { EventDetail } from '../services/event.service';
+import type { TicketType } from '../services/ticketType.service';
 import './EventDetail.css';
 
 const EventDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [event, setEvent] = useState<EventDetail | null>(null);
+  const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [selectedTickets, setSelectedTickets] = useState<Map<number, number>>(new Map());
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'info' | 'tickets'>('info');
 
   useEffect(() => {
-    if (id) {
-      loadEventDetail(parseInt(id));
-    }
+    if (id) loadEventDetail(parseInt(id));
   }, [id]);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const loadEventDetail = async (eventId: number) => {
     try {
       setLoading(true);
-      const [detail, isFav, count] = await Promise.all([
+      const [detail, ticketTypesResponse, isFav, count] = await Promise.all([
         eventService.getEventDetail(eventId),
+        ticketTypeService.getByEventId(eventId, true),
         favoriteService.checkFavorite(eventId).catch(() => false),
         favoriteService.getFavoriteCount(eventId).catch(() => 0),
       ]);
-
       setEvent(detail);
+      setTicketTypes(ticketTypesResponse.data);
       setIsFavorite(isFav);
       setFavoriteCount(count);
     } catch (error) {
@@ -46,14 +58,17 @@ const EventDetailPage = () => {
   };
 
   const handleToggleFavorite = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để yêu thích sự kiện');
+      return;
+    }
     if (!id) return;
-    
     try {
       const isNowFavorite = await favoriteService.toggleFavorite(parseInt(id));
       setIsFavorite(isNowFavorite);
-      
       const newCount = await favoriteService.getFavoriteCount(parseInt(id));
       setFavoriteCount(newCount);
+      showToast(isNowFavorite ? '❤️ Đã thêm vào yêu thích' : 'Đã bỏ yêu thích');
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
@@ -63,91 +78,80 @@ const EventDetailPage = () => {
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: event?.tenSuKien,
-          text: event?.moTa || '',
-          url: url,
-        });
-      } catch (error) {
-        console.log('Share cancelled');
-      }
+        await navigator.share({ title: event?.tenSuKien, text: event?.moTa || '', url });
+      } catch { /* cancelled */ }
     } else {
       navigator.clipboard.writeText(url);
-      alert('Đã copy link vào clipboard!');
+      showToast('✅ Đã copy link sự kiện!');
     }
   };
 
   const handleTicketQuantityChange = (loaiVeId: number, quantity: number) => {
-    const newSelected = new Map(selectedTickets);
-    if (quantity <= 0) {
-      newSelected.delete(loaiVeId);
-    } else {
-      newSelected.set(loaiVeId, quantity);
+    if (!user) {
+      showToast('Vui lòng đăng nhập để đặt vé');
+      navigate('/login');
+      return;
     }
+    const newSelected = new Map(selectedTickets);
+    if (quantity <= 0) newSelected.delete(loaiVeId);
+    else newSelected.set(loaiVeId, quantity);
     setSelectedTickets(newSelected);
   };
 
   const handleBookTickets = () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để đặt vé');
+      navigate('/login');
+      return;
+    }
     if (selectedTickets.size === 0) {
-      alert('Vui lòng chọn ít nhất 1 loại vé');
+      showToast('Vui lòng chọn ít nhất 1 loại vé');
       return;
     }
     setShowBookingModal(true);
   };
 
   const handleConfirmBooking = () => {
-    // TODO: Navigate to checkout page with selected tickets
     const ticketData = Array.from(selectedTickets.entries()).map(([loaiVeId, quantity]) => ({
       loaiVeId,
       quantity,
     }));
-    
-    console.log('Booking tickets:', ticketData);
     navigate(`/checkout/${id}`, { state: { tickets: ticketData } });
   };
 
   const calculateTotal = () => {
-    if (!event) return 0;
-    
     let total = 0;
     selectedTickets.forEach((quantity, loaiVeId) => {
-      const loaiVe = event.loaiVes.find(lv => lv.loaiVeID === loaiVeId);
-      if (loaiVe) {
-        total += loaiVe.donGia * quantity;
-      }
+      const loaiVe = ticketTypes.find(lv => lv.loaiVeID === loaiVeId);
+      if (loaiVe) total += loaiVe.donGia * quantity;
     });
     return total;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('vi-VN', {
+      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
     });
-  };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const formatTime = (dateString: string) =>
+    new Date(dateString).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+  const getDuration = (start: string, end: string) => {
+    const ms = new Date(end).getTime() - new Date(start).getTime();
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0 && mins > 0) return `${hours}h ${mins}p`;
+    if (hours > 0) return `${hours} giờ`;
+    return `${mins} phút`;
   };
 
   if (loading) {
     return (
-      <div className="event-detail-loading">
-        <div className="spinner"></div>
+      <div className="ed-loading">
+        <div className="ed-spinner" />
         <p>Đang tải thông tin sự kiện...</p>
       </div>
     );
@@ -155,257 +159,414 @@ const EventDetailPage = () => {
 
   if (!event) {
     return (
-      <div className="event-detail-error">
-        <AlertCircle size={48} />
+      <div className="ed-not-found">
+        <AlertCircle size={64} />
         <h2>Không tìm thấy sự kiện</h2>
-        <button onClick={() => navigate('/attendee')} className="btn-back">
-          Quay về trang chủ
+        <p>Sự kiện này có thể đã bị xóa hoặc không tồn tại.</p>
+        <button onClick={() => navigate('/attendee')} className="ed-btn-back">
+          ← Về trang chủ
         </button>
       </div>
     );
   }
 
-  const totalTicketsSelected = Array.from(selectedTickets.values()).reduce((sum, qty) => sum + qty, 0);
+  const totalTicketsSelected = Array.from(selectedTickets.values()).reduce((s, q) => s + q, 0);
+  const minPrice = ticketTypes.length > 0 ? Math.min(...ticketTypes.map(t => t.donGia)) : 0;
+  const totalAvailable = ticketTypes.reduce((s, t) => s + t.soLuongCon, 0);
+  const isSoldOut = totalAvailable === 0 && ticketTypes.length > 0;
 
   return (
-    <div className="event-detail">
-      {/* Header */}
-      <div className="detail-header">
-        <button onClick={() => navigate(-1)} className="btn-back-header">
-          <ArrowLeft size={20} />
-          <span>Quay lại</span>
+    <div className="ed-root">
+      {/* Toast */}
+      {toast && <div className="ed-toast">{toast}</div>}
+
+      {/* Top Bar */}
+      <div className="ed-topbar">
+        <button onClick={() => navigate(-1)} className="ed-btn-nav">
+          <ArrowLeft size={18} /> Quay lại
         </button>
-        <div className="header-actions">
-          <button 
-            onClick={handleToggleFavorite} 
-            className={`btn-icon ${isFavorite ? 'active' : ''}`}
+        <div className="ed-topbar-actions">
+          <button
+            onClick={handleToggleFavorite}
+            className={`ed-btn-icon ${isFavorite ? 'active' : ''}`}
+            title="Yêu thích"
           >
-            <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+            <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
             <span>{favoriteCount}</span>
           </button>
-          <button onClick={handleShare} className="btn-icon">
-            <Share2 size={20} />
+          <button onClick={handleShare} className="ed-btn-icon" title="Chia sẻ">
+            <Share2 size={18} />
           </button>
         </div>
       </div>
 
-      {/* Hero Image */}
-      <div className="detail-hero">
-        <img 
-          src={event.anhBiaUrl || 'https://via.placeholder.com/1200x600?text=Event+Image'} 
+      {/* Hero */}
+      <div className="ed-hero">
+        <img
+          src={event.anhBiaUrl || `https://picsum.photos/seed/${event.suKienID}/1200/500`}
           alt={event.tenSuKien}
-          className="hero-image"
+          className="ed-hero-img"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${event.suKienID}/1200/500`;
+          }}
         />
-        <div className="hero-overlay">
-          <div className="hero-content">
-            <h1 className="event-title">{event.tenSuKien}</h1>
-            <div className="event-meta">
-              <div className="meta-item">
-                <Calendar size={18} />
-                <span>{formatDate(event.thoiGianBatDau)}</span>
-              </div>
-              <div className="meta-item">
-                <Clock size={18} />
-                <span>{formatTime(event.thoiGianBatDau)} - {formatTime(event.thoiGianKetThuc)}</span>
-              </div>
+        <div className="ed-hero-overlay">
+          <div className="ed-hero-content">
+            {event.tenDanhMuc && (
+              <span className="ed-category-badge">
+                <Tag size={13} /> {event.tenDanhMuc}
+              </span>
+            )}
+            <h1 className="ed-title">{event.tenSuKien}</h1>
+            <div className="ed-hero-meta">
+              <span><Calendar size={15} /> {formatDate(event.thoiGianBatDau)}</span>
+              <span><Clock size={15} /> {formatTime(event.thoiGianBatDau)}</span>
+              {event.tenDiaDiem && <span><MapPin size={15} /> {event.tenDiaDiem}</span>}
             </div>
           </div>
         </div>
+        {isSoldOut && <div className="ed-sold-out-ribbon">HẾT VÉ</div>}
       </div>
 
-      {/* Main Content */}
-      <div className="detail-container">
-        <div className="detail-main">
-          {/* Event Info */}
-          <section className="detail-section">
-            <h2 className="section-title">Thông tin sự kiện</h2>
-            <div className="event-info">
-              <p className="event-description">{event.moTa || 'Chưa có mô tả'}</p>
+      {/* Quick Info Bar */}
+      <div className="ed-info-bar">
+        <div className="ed-info-item">
+          <Calendar size={18} />
+          <div>
+            <span className="ed-info-label">Ngày diễn ra</span>
+            <span className="ed-info-value">{formatDate(event.thoiGianBatDau)}</span>
+          </div>
+        </div>
+        <div className="ed-info-divider" />
+        <div className="ed-info-item">
+          <Clock size={18} />
+          <div>
+            <span className="ed-info-label">Thời gian</span>
+            <span className="ed-info-value">
+              {formatTime(event.thoiGianBatDau)} – {formatTime(event.thoiGianKetThuc)}
+              {event.thoiGianKetThuc && (
+                <em> ({getDuration(event.thoiGianBatDau, event.thoiGianKetThuc)})</em>
+              )}
+            </span>
+          </div>
+        </div>
+        <div className="ed-info-divider" />
+        <div className="ed-info-item">
+          <MapPin size={18} />
+          <div>
+            <span className="ed-info-label">Địa điểm</span>
+            <span className="ed-info-value">{event.tenDiaDiem || 'Chưa xác định'}</span>
+          </div>
+        </div>
+        {minPrice > 0 && (
+          <>
+            <div className="ed-info-divider" />
+            <div className="ed-info-item">
+              <Ticket size={18} />
+              <div>
+                <span className="ed-info-label">Giá từ</span>
+                <span className="ed-info-value highlight">{formatCurrency(minPrice)}</span>
+              </div>
             </div>
-          </section>
+          </>
+        )}
+      </div>
 
-          {/* Ticket Types */}
-          <section className="detail-section">
-            <h2 className="section-title">
-              <Ticket size={24} />
-              Loại vé
-            </h2>
-            <div className="ticket-list">
-              {event.loaiVes.length === 0 ? (
-                <div className="no-tickets">
-                  <AlertCircle size={32} />
-                  <p>Chưa có loại vé nào</p>
-                </div>
-              ) : (
-                event.loaiVes.map((loaiVe) => (
-                  <div key={loaiVe.loaiVeID} className="ticket-card">
-                    <div className="ticket-info">
-                      <div className="ticket-header">
-                        <h3 className="ticket-name">{loaiVe.tenLoaiVe}</h3>
-                        <span className={`ticket-status ${loaiVe.dangMoBan ? 'available' : 'unavailable'}`}>
-                          {loaiVe.trangThaiMoBan}
-                        </span>
-                      </div>
-                      {loaiVe.moTa && <p className="ticket-description">{loaiVe.moTa}</p>}
-                      
-                      <div className="ticket-details">
-                        <div className="ticket-price">{formatCurrency(loaiVe.donGia)}</div>
-                        <div className="ticket-availability">
-                          <Users size={16} />
-                          <span>Còn {loaiVe.soLuongCon}/{loaiVe.soLuongToiDa} vé</span>
-                        </div>
-                      </div>
+      {/* Main Layout */}
+      <div className="ed-layout">
+        {/* Left: Content */}
+        <div className="ed-content">
+          {/* Tabs */}
+          <div className="ed-tabs">
+            <button
+              className={`ed-tab ${activeTab === 'info' ? 'active' : ''}`}
+              onClick={() => setActiveTab('info')}
+            >
+              <Info size={16} /> Thông tin
+            </button>
+            <button
+              className={`ed-tab ${activeTab === 'tickets' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tickets')}
+            >
+              <Ticket size={16} /> Đặt vé
+              {ticketTypes.length > 0 && <span className="ed-tab-badge">{ticketTypes.length}</span>}
+            </button>
+          </div>
 
-                      {loaiVe.soLuongCon > 0 && (
-                        <div className="ticket-progress">
-                          <div 
-                            className="progress-bar" 
-                            style={{ width: `${loaiVe.phanTramDaBan}%` }}
-                          ></div>
-                        </div>
+          {/* Tab: Info */}
+          {activeTab === 'info' && (
+            <div className="ed-tab-content">
+              {/* Mô tả */}
+              <section className="ed-section">
+                <h2 className="ed-section-title">📝 Mô tả sự kiện</h2>
+                <p className="ed-description">{event.moTa || 'Chưa có mô tả cho sự kiện này.'}</p>
+              </section>
+
+              {/* Địa điểm */}
+              {event.tenDiaDiem && (
+                <section className="ed-section">
+                  <h2 className="ed-section-title">📍 Địa điểm</h2>
+                  <div className="ed-location-card">
+                    <div className="ed-location-info">
+                      <h3>{event.tenDiaDiem}</h3>
+                      {(event as EventDetail & { diaChi?: string }).diaChi && (
+                        <p><MapPin size={14} /> {(event as EventDetail & { diaChi?: string }).diaChi}</p>
                       )}
                     </div>
-
-                    <div className="ticket-actions">
-                      {loaiVe.dangMoBan && loaiVe.conVe ? (
-                        <div className="quantity-selector">
-                          <button 
-                            onClick={() => handleTicketQuantityChange(
-                              loaiVe.loaiVeID, 
-                              (selectedTickets.get(loaiVe.loaiVeID) || 0) - 1
-                            )}
-                            disabled={!selectedTickets.has(loaiVe.loaiVeID)}
-                            className="qty-btn"
-                          >
-                            -
-                          </button>
-                          <span className="qty-display">
-                            {selectedTickets.get(loaiVe.loaiVeID) || 0}
-                          </span>
-                          <button 
-                            onClick={() => handleTicketQuantityChange(
-                              loaiVe.loaiVeID, 
-                              (selectedTickets.get(loaiVe.loaiVeID) || 0) + 1
-                            )}
-                            disabled={
-                              (selectedTickets.get(loaiVe.loaiVeID) || 0) >= loaiVe.soLuongCon ||
-                              (selectedTickets.get(loaiVe.loaiVeID) || 0) >= (loaiVe.gioiHanMoiKhach || 999)
-                            }
-                            className="qty-btn"
-                          >
-                            +
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="ticket-unavailable">
-                          <AlertCircle size={16} />
-                          <span>{loaiVe.trangThaiMoBan}</span>
-                        </div>
-                      )}
-                    </div>
+                    <a
+                      href={`https://www.google.com/maps/search/${encodeURIComponent(event.tenDiaDiem)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ed-btn-map"
+                    >
+                      <ExternalLink size={14} /> Xem bản đồ
+                    </a>
                   </div>
-                ))
+                </section>
+              )}
+
+              {/* Thống kê vé */}
+              {ticketTypes.length > 0 && (
+                <section className="ed-section">
+                  <h2 className="ed-section-title">🎫 Tình trạng vé</h2>
+                  <div className="ed-ticket-summary">
+                    <div className={`ed-ticket-status-badge ${isSoldOut ? 'sold-out' : 'available'}`}>
+                      {isSoldOut ? (
+                        <><AlertCircle size={16} /> Hết vé</>
+                      ) : (
+                        <><CheckCircle size={16} /> Còn {totalAvailable} vé</>
+                      )}
+                    </div>
+                    <button
+                      className="ed-btn-go-tickets"
+                      onClick={() => setActiveTab('tickets')}
+                    >
+                      <Ticket size={16} /> Chọn vé ngay →
+                    </button>
+                  </div>
+                </section>
               )}
             </div>
-          </section>
+          )}
+
+          {/* Tab: Tickets */}
+          {activeTab === 'tickets' && (
+            <div className="ed-tab-content">
+              {!user && (
+                <div className="ed-login-notice">
+                  <AlertCircle size={20} />
+                  <span>Vui lòng <button onClick={() => navigate('/login')}>đăng nhập</button> để đặt vé</span>
+                </div>
+              )}
+              <div className="ed-ticket-list">
+                {ticketTypes.length === 0 ? (
+                  <div className="ed-no-tickets">
+                    <Ticket size={48} />
+                    <p>Chưa có loại vé nào được mở bán</p>
+                  </div>
+                ) : (
+                  ticketTypes.map((lv) => {
+                    const qty = selectedTickets.get(lv.loaiVeID) || 0;
+                    const pct = lv.soLuongToiDa > 0
+                      ? Math.round((lv.soLuongToiDa - lv.soLuongCon) / lv.soLuongToiDa * 100)
+                      : 0;
+                    return (
+                      <div key={lv.loaiVeID} className={`ed-ticket-card ${!lv.dangMoBan || !lv.conVe ? 'disabled' : ''}`}>
+                        <div className="ed-ticket-left">
+                          <div className="ed-ticket-deco" />
+                        </div>
+                        <div className="ed-ticket-body">
+                          <div className="ed-ticket-top">
+                            <div>
+                              <h3 className="ed-ticket-name">{lv.tenLoaiVe}</h3>
+                              {lv.moTa && <p className="ed-ticket-desc">{lv.moTa}</p>}
+                            </div>
+                            <span className={`ed-ticket-badge ${lv.dangMoBan && lv.conVe ? 'sale' : 'stop'}`}>
+                              {lv.trangThaiMoBan}
+                            </span>
+                          </div>
+
+                          <div className="ed-ticket-stats">
+                            <span className="ed-ticket-price">{formatCurrency(lv.donGia)}</span>
+                            <span className="ed-ticket-remain">
+                              <Users size={13} /> Còn {lv.soLuongCon}/{lv.soLuongToiDa} vé
+                            </span>
+                          </div>
+
+                          {/* Progress */}
+                          <div className="ed-ticket-progress">
+                            <div className="ed-ticket-progress-bar" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="ed-ticket-pct-row">
+                            <span>{pct}% đã bán</span>
+                            {lv.gioiHanMoiKhach && (
+                              <span>Tối đa {lv.gioiHanMoiKhach} vé/người</span>
+                            )}
+                          </div>
+
+                          {/* Quantity */}
+                          {lv.dangMoBan && lv.conVe ? (
+                            <div className="ed-qty-row">
+                              <button
+                                className="ed-qty-btn"
+                                onClick={() => handleTicketQuantityChange(lv.loaiVeID, qty - 1)}
+                                disabled={qty === 0}
+                              >−</button>
+                              <span className="ed-qty-val">{qty}</span>
+                              <button
+                                className="ed-qty-btn"
+                                onClick={() => handleTicketQuantityChange(lv.loaiVeID, qty + 1)}
+                                disabled={qty >= lv.soLuongCon || qty >= (lv.gioiHanMoiKhach || 999)}
+                              >+</button>
+                              {qty > 0 && (
+                                <span className="ed-qty-subtotal">
+                                  = {formatCurrency(lv.donGia * qty)}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="ed-ticket-unavail">
+                              <AlertCircle size={14} /> {lv.trangThaiMoBan}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Sidebar */}
-        <aside className="detail-sidebar">
-          <div className="sidebar-sticky">
-            {/* Price Summary */}
-            <div className="price-summary">
-              <h3>Tổng quan giá vé</h3>
-              {event.giaThapNhat > 0 && (
-                <div className="price-range">
-                  <span className="price-label">Giá từ:</span>
-                  <span className="price-value">{formatCurrency(event.giaThapNhat)}</span>
-                </div>
-              )}
-              {event.tongVeConLai > 0 ? (
-                <div className="tickets-remaining">
-                  <CheckCircle size={16} />
-                  <span>Còn {event.tongVeConLai} vé</span>
-                </div>
-              ) : (
-                <div className="tickets-sold-out">
-                  <AlertCircle size={16} />
-                  <span>Đã hết vé</span>
-                </div>
-              )}
-            </div>
+        {/* Right: Sidebar */}
+        <aside className="ed-sidebar">
+          <div className="ed-sidebar-sticky">
+            {/* Price card */}
+            <div className="ed-price-card">
+              <div className="ed-price-header">
+                {minPrice === 0 ? (
+                  <span className="ed-price-free">Miễn phí</span>
+                ) : (
+                  <>
+                    <span className="ed-price-from">Từ</span>
+                    <span className="ed-price-val">{formatCurrency(minPrice)}</span>
+                  </>
+                )}
+              </div>
 
-            {/* Booking Summary */}
-            {totalTicketsSelected > 0 && (
-              <div className="booking-summary">
-                <h3>Đơn hàng của bạn</h3>
-                <div className="summary-items">
-                  {Array.from(selectedTickets.entries()).map(([loaiVeId, quantity]) => {
-                    const loaiVe = event.loaiVes.find(lv => lv.loaiVeID === loaiVeId);
-                    if (!loaiVe) return null;
-                    
+              {totalAvailable > 0 ? (
+                <div className="ed-avail-good">
+                  <CheckCircle size={15} /> Còn {totalAvailable} vé
+                </div>
+              ) : ticketTypes.length > 0 ? (
+                <div className="ed-avail-out">
+                  <AlertCircle size={15} /> Hết vé
+                </div>
+              ) : null}
+
+              {/* Order summary */}
+              {totalTicketsSelected > 0 && (
+                <div className="ed-order-summary">
+                  <h4>Đơn hàng của bạn</h4>
+                  {Array.from(selectedTickets.entries()).map(([loaiVeId, qty]) => {
+                    const lv = ticketTypes.find(t => t.loaiVeID === loaiVeId);
+                    if (!lv) return null;
                     return (
-                      <div key={loaiVeId} className="summary-item">
-                        <div className="item-info">
-                          <span className="item-name">{loaiVe.tenLoaiVe}</span>
-                          <span className="item-qty">x{quantity}</span>
-                        </div>
-                        <span className="item-price">
-                          {formatCurrency(loaiVe.donGia * quantity)}
-                        </span>
+                      <div key={loaiVeId} className="ed-order-row">
+                        <span>{lv.tenLoaiVe} × {qty}</span>
+                        <span>{formatCurrency(lv.donGia * qty)}</span>
                       </div>
                     );
                   })}
+                  <div className="ed-order-total">
+                    <strong>Tổng cộng</strong>
+                    <strong>{formatCurrency(calculateTotal())}</strong>
+                  </div>
                 </div>
-                <div className="summary-total">
-                  <span>Tổng cộng:</span>
-                  <span className="total-amount">{formatCurrency(calculateTotal())}</span>
-                </div>
-                <button onClick={handleBookTickets} className="btn-book">
-                  <ShoppingCart size={20} />
-                  Đặt vé ngay
-                </button>
+              )}
+
+              <button
+                className="ed-btn-book"
+                onClick={totalTicketsSelected > 0 ? handleBookTickets : () => setActiveTab('tickets')}
+                disabled={isSoldOut}
+              >
+                <ShoppingCart size={18} />
+                {isSoldOut
+                  ? 'Đã hết vé'
+                  : totalTicketsSelected > 0
+                    ? `Đặt ${totalTicketsSelected} vé — ${formatCurrency(calculateTotal())}`
+                    : 'Chọn vé ngay'}
+              </button>
+
+              {!user && (
+                <p className="ed-login-hint">
+                  <AlertCircle size={13} />
+                  <button onClick={() => navigate('/login')}>Đăng nhập</button> để đặt vé
+                </p>
+              )}
+            </div>
+
+            {/* Event summary */}
+            <div className="ed-sidebar-info">
+              <div className="ed-sidebar-row">
+                <Calendar size={15} />
+                <span>{formatDate(event.thoiGianBatDau)}</span>
               </div>
-            )}
+              <div className="ed-sidebar-row">
+                <Clock size={15} />
+                <span>{formatTime(event.thoiGianBatDau)} – {formatTime(event.thoiGianKetThuc)}</span>
+              </div>
+              {event.tenDiaDiem && (
+                <div className="ed-sidebar-row">
+                  <MapPin size={15} />
+                  <span>{event.tenDiaDiem}</span>
+                </div>
+              )}
+            </div>
           </div>
         </aside>
       </div>
 
       {/* Booking Confirmation Modal */}
       {showBookingModal && (
-        <div className="modal-overlay" onClick={() => setShowBookingModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowBookingModal(false)}>
-              <X size={24} />
-            </button>
-            <h2>Xác nhận đặt vé</h2>
-            <div className="modal-body">
-              <p>Bạn đang đặt {totalTicketsSelected} vé cho sự kiện:</p>
-              <h3>{event.tenSuKien}</h3>
-              <div className="modal-summary">
-                {Array.from(selectedTickets.entries()).map(([loaiVeId, quantity]) => {
-                  const loaiVe = event.loaiVes.find(lv => lv.loaiVeID === loaiVeId);
-                  if (!loaiVe) return null;
-                  
+        <div className="ed-modal-overlay" onClick={() => setShowBookingModal(false)}>
+          <div className="ed-modal" onClick={e => e.stopPropagation()}>
+            <div className="ed-modal-header">
+              <h2>🎫 Xác nhận đặt vé</h2>
+              <button className="ed-modal-close" onClick={() => setShowBookingModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="ed-modal-body">
+              <div className="ed-modal-event">
+                <h3>{event.tenSuKien}</h3>
+                <p><Calendar size={14} /> {formatDate(event.thoiGianBatDau)}</p>
+                {event.tenDiaDiem && <p><MapPin size={14} /> {event.tenDiaDiem}</p>}
+              </div>
+              <div className="ed-modal-items">
+                {Array.from(selectedTickets.entries()).map(([loaiVeId, qty]) => {
+                  const lv = ticketTypes.find(t => t.loaiVeID === loaiVeId);
+                  if (!lv) return null;
                   return (
-                    <div key={loaiVeId} className="modal-item">
-                      <span>{loaiVe.tenLoaiVe} x{quantity}</span>
-                      <span>{formatCurrency(loaiVe.donGia * quantity)}</span>
+                    <div key={loaiVeId} className="ed-modal-row">
+                      <span>{lv.tenLoaiVe} × {qty}</span>
+                      <strong>{formatCurrency(lv.donGia * qty)}</strong>
                     </div>
                   );
                 })}
-                <div className="modal-total">
-                  <strong>Tổng cộng:</strong>
-                  <strong>{formatCurrency(calculateTotal())}</strong>
-                </div>
+              </div>
+              <div className="ed-modal-total">
+                <span>Tổng thanh toán</span>
+                <strong className="ed-modal-total-val">{formatCurrency(calculateTotal())}</strong>
               </div>
             </div>
-            <div className="modal-actions">
-              <button onClick={() => setShowBookingModal(false)} className="btn-cancel">
+            <div className="ed-modal-footer">
+              <button className="ed-modal-btn cancel" onClick={() => setShowBookingModal(false)}>
                 Hủy
               </button>
-              <button onClick={handleConfirmBooking} className="btn-confirm">
-                Xác nhận
+              <button className="ed-modal-btn confirm" onClick={handleConfirmBooking}>
+                <ShoppingCart size={16} /> Tiến hành thanh toán
               </button>
             </div>
           </div>
