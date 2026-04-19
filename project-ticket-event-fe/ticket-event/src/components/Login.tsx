@@ -23,11 +23,29 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData);
-      // Redirect based on role after successful login
-      // Note: We'll navigate after the user state is updated
-      // For now, redirect to home and let the Home component handle routing
-      navigate('/');
+      const response = await login(formData);
+      
+      console.log('Login response:', response);
+      console.log('VaiTroId:', response.vaiTroId);
+      
+      // Redirect based on role
+      if (response.vaiTroId === 1) {
+        // Admin
+        console.log('Redirecting to /admin');
+        navigate('/admin');
+      } else if (response.vaiTroId === 2) {
+        // Organizer
+        console.log('Redirecting to /organizer');
+        navigate('/organizer');
+      } else if (response.vaiTroId === 3) {
+        // Attendee
+        console.log('Redirecting to /attendee');
+        navigate('/attendee');
+      } else {
+        // Default
+        console.log('VaiTroId not recognized, redirecting to /login');
+        navigate('/login');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
     } finally {

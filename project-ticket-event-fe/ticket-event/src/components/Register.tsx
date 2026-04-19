@@ -7,7 +7,7 @@ import './Auth.css';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   const [formData, setFormData] = useState({
     hoTen: '',
     tenDangNhap: '',
@@ -57,7 +57,24 @@ const Register = () => {
     try {
       const { xacNhanMatKhau, ...registerData } = formData;
       await register(registerData);
-      navigate('/login', { state: { registered: true } });
+      
+      // Tự động đăng nhập sau khi đăng ký thành công
+      const loginResponse = await login({
+        tenDangNhap: formData.tenDangNhap,
+        email: formData.email,
+        matKhau: formData.matKhau,
+      });
+      
+      // Redirect dựa trên vai trò
+      if (loginResponse.vaiTroId === 1) {
+        navigate('/admin');
+      } else if (loginResponse.vaiTroId === 2) {
+        navigate('/organizer');
+      } else if (loginResponse.vaiTroId === 3) {
+        navigate('/attendee');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng ký thất bại');
     } finally {
