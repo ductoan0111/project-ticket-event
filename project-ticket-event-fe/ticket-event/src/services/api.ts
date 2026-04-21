@@ -38,33 +38,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    // If 401 and not already retried, try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await axios.post(API_ENDPOINTS.REFRESH_TOKEN, {
-            refreshToken,
-          });
-
-          const { token, refreshToken: newRefreshToken } = response.data;
-          localStorage.setItem('accessToken', token);
-          localStorage.setItem('refreshToken', newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, logout user
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+    // If 401, clear tokens and redirect to login
+    if (error.response?.status === 401) {
+      console.error('Unauthorized (401). Clearing tokens and redirecting to login...');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
 
@@ -103,34 +84,93 @@ attendeeApi.interceptors.request.use(
 attendeeApi.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await axios.post(API_ENDPOINTS.REFRESH_TOKEN, {
-            refreshToken,
-          });
-
-          const { token, refreshToken: newRefreshToken } = response.data;
-          localStorage.setItem('accessToken', token);
-          localStorage.setItem('refreshToken', newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return attendeeApi(originalRequest);
-        }
-      } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+    if (error.response?.status === 401) {
+      console.error('Unauthorized (401) in attendeeApi. Redirecting to login...');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
+    return Promise.reject(error);
+  }
+);
 
+// ============================================
+// ORGANIZER API INSTANCE
+// ============================================
+const ORGANIZER_API_BASE_URL = import.meta.env.VITE_ORGANIZER_API_URL || 'https://localhost:44343/api';
+
+export const organizerApi: AxiosInstance = axios.create({
+  baseURL: ORGANIZER_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+organizerApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+organizerApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized (401) in organizerApi. Redirecting to login...');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ============================================
+// ADMIN API INSTANCE
+// ============================================
+const ADMIN_API_BASE_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://localhost:44311/api';
+
+export const adminApi: AxiosInstance = axios.create({
+  baseURL: ADMIN_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+adminApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+adminApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized (401) in adminApi. Redirecting to login...');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );

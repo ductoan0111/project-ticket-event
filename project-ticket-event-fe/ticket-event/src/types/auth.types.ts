@@ -18,6 +18,7 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   expiresAt: string;
+  nguoiDungId?: number;
   hoTen: string;
   tenDangNhap: string;
   email: string;
@@ -27,6 +28,7 @@ export interface LoginResponse {
 }
 
 export interface User {
+  nguoiDungId?: number;
   hoTen: string;
   tenDangNhap: string;
   email: string;
