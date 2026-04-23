@@ -34,7 +34,7 @@ function App() {
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
+
           {/* Admin routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
@@ -43,7 +43,7 @@ function App() {
             <Route path="locations" element={<AdminLocations />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
-          
+
           {/* Attendee routes */}
           <Route path="/attendee" element={<AttendeeHome />} />
           <Route path="/events/:id" element={<EventDetailPage />} />
@@ -53,7 +53,7 @@ function App() {
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/favorites" element={<Favorites />} />
-          
+
           {/* Organizer routes */}
           <Route path="/organizer" element={<OrganizerLayout />}>
             <Route index element={<OrganizerDashboard />} />
@@ -64,10 +64,10 @@ function App() {
             <Route path="checkin" element={<OrganizerCheckIn />} />
             <Route path="notifications" element={<OrganizerNotifications />} />
           </Route>
-          
+
           {/* Default route */}
           <Route path="/" element={<AttendeeHome />} />
-          
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

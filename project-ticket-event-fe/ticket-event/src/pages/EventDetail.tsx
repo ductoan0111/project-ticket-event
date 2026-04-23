@@ -358,6 +358,40 @@ const EventDetailPage = () => {
                   <span>Vui lòng <button onClick={() => navigate('/login')}>đăng nhập</button> để đặt vé</span>
                 </div>
               )}
+              
+              {/* So sánh loại vé */}
+              {ticketTypes.length > 1 && (
+                <div className="ed-ticket-compare">
+                  <h3 className="ed-compare-title">📊 So sánh loại vé</h3>
+                  <div className="ed-compare-table">
+                    <div className="ed-compare-row header">
+                      <div className="ed-compare-cell">Loại vé</div>
+                      <div className="ed-compare-cell">Giá</div>
+                      <div className="ed-compare-cell">Còn lại</div>
+                      <div className="ed-compare-cell">Giới hạn</div>
+                    </div>
+                    {ticketTypes.map(lv => (
+                      <div key={lv.loaiVeID} className="ed-compare-row">
+                        <div className="ed-compare-cell name">
+                          <strong>{lv.tenLoaiVe}</strong>
+                          {lv.moTa && <small>{lv.moTa}</small>}
+                        </div>
+                        <div className="ed-compare-cell price">{formatCurrency(lv.donGia)}</div>
+                        <div className="ed-compare-cell stock">
+                          {lv.soLuongCon}/{lv.soLuongToiDa}
+                          <span className={`ed-compare-badge ${lv.soLuongCon > 0 ? 'ok' : 'out'}`}>
+                            {lv.soLuongCon > 0 ? '✓' : '✗'}
+                          </span>
+                        </div>
+                        <div className="ed-compare-cell limit">
+                          {lv.gioiHanMoiKhach ? `${lv.gioiHanMoiKhach} vé/người` : 'Không giới hạn'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="ed-ticket-list">
                 {ticketTypes.length === 0 ? (
                   <div className="ed-no-tickets">
@@ -370,6 +404,30 @@ const EventDetailPage = () => {
                     const pct = lv.soLuongToiDa > 0
                       ? Math.round((lv.soLuongToiDa - lv.soLuongCon) / lv.soLuongToiDa * 100)
                       : 0;
+                    
+                    // Tính toán badges
+                    const isAlmostSoldOut = lv.soLuongCon > 0 && lv.soLuongCon <= lv.soLuongToiDa * 0.1; // Còn <= 10%
+                    const isHotSelling = pct >= 50 && pct < 90; // Đã bán 50-90%
+                    const isEarlyBird = lv.tenLoaiVe.toLowerCase().includes('early') || lv.tenLoaiVe.toLowerCase().includes('sớm');
+                    
+                    // Countdown timer
+                    const now = new Date();
+                    const saleStart = lv.thoiGianMoBan ? new Date(lv.thoiGianMoBan) : null;
+                    const saleEnd = lv.thoiGianDongBan ? new Date(lv.thoiGianDongBan) : null;
+                    const isBeforeSale = saleStart && now < saleStart;
+                    const isAfterSale = saleEnd && now > saleEnd;
+                    
+                    const getTimeRemaining = (targetDate: Date) => {
+                      const diff = targetDate.getTime() - now.getTime();
+                      if (diff <= 0) return null;
+                      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                      if (days > 0) return `${days} ngày ${hours}h`;
+                      if (hours > 0) return `${hours}h ${mins}p`;
+                      return `${mins} phút`;
+                    };
+
                     return (
                       <div key={lv.loaiVeID} className={`ed-ticket-card ${!lv.dangMoBan || !lv.conVe ? 'disabled' : ''}`}>
                         <div className="ed-ticket-left">
@@ -378,8 +436,27 @@ const EventDetailPage = () => {
                         <div className="ed-ticket-body">
                           <div className="ed-ticket-top">
                             <div>
-                              <h3 className="ed-ticket-name">{lv.tenLoaiVe}</h3>
+                              <div className="ed-ticket-name-row">
+                                <h3 className="ed-ticket-name">{lv.tenLoaiVe}</h3>
+                                <div className="ed-ticket-badges">
+                                  {isEarlyBird && <span className="ed-mini-badge early">🎉 Early Bird</span>}
+                                  {isHotSelling && <span className="ed-mini-badge hot">🔥 Bán chạy</span>}
+                                  {isAlmostSoldOut && <span className="ed-mini-badge almost">⚠️ Sắp hết</span>}
+                                </div>
+                              </div>
                               {lv.moTa && <p className="ed-ticket-desc">{lv.moTa}</p>}
+                              
+                              {/* Countdown timer */}
+                              {isBeforeSale && saleStart && (
+                                <div className="ed-ticket-countdown">
+                                  <Clock size={12} /> Mở bán sau: <strong>{getTimeRemaining(saleStart)}</strong>
+                                </div>
+                              )}
+                              {!isBeforeSale && !isAfterSale && saleEnd && (
+                                <div className="ed-ticket-countdown warning">
+                                  <Clock size={12} /> Đóng bán sau: <strong>{getTimeRemaining(saleEnd)}</strong>
+                                </div>
+                              )}
                             </div>
                             <span className={`ed-ticket-badge ${lv.dangMoBan && lv.conVe ? 'sale' : 'stop'}`}>
                               {lv.trangThaiMoBan}
@@ -395,17 +472,25 @@ const EventDetailPage = () => {
 
                           {/* Progress */}
                           <div className="ed-ticket-progress">
-                            <div className="ed-ticket-progress-bar" style={{ width: `${pct}%` }} />
+                            <div 
+                              className="ed-ticket-progress-bar" 
+                              style={{ 
+                                width: `${pct}%`,
+                                background: isAlmostSoldOut ? 'linear-gradient(90deg, #ef4444, #f97316)' : undefined
+                              }} 
+                            />
                           </div>
                           <div className="ed-ticket-pct-row">
                             <span>{pct}% đã bán</span>
                             {lv.gioiHanMoiKhach && (
-                              <span>Tối đa {lv.gioiHanMoiKhach} vé/người</span>
+                              <span className="ed-ticket-limit">
+                                <AlertCircle size={11} /> Tối đa {lv.gioiHanMoiKhach} vé/người
+                              </span>
                             )}
                           </div>
 
                           {/* Quantity */}
-                          {lv.dangMoBan && lv.conVe ? (
+                          {lv.dangMoBan && lv.conVe && !isBeforeSale && !isAfterSale ? (
                             <div className="ed-qty-row">
                               <button
                                 className="ed-qty-btn"
@@ -426,7 +511,8 @@ const EventDetailPage = () => {
                             </div>
                           ) : (
                             <div className="ed-ticket-unavail">
-                              <AlertCircle size={14} /> {lv.trangThaiMoBan}
+                              <AlertCircle size={14} /> 
+                              {isBeforeSale ? 'Chưa mở bán' : isAfterSale ? 'Đã đóng bán' : lv.trangThaiMoBan}
                             </div>
                           )}
                         </div>

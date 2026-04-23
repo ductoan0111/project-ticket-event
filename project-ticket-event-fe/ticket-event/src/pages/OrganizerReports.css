@@ -40,7 +40,9 @@
   transition: all 0.2s;
 }
 
-.rpt-back-btn:hover { background: #e2e8f0; }
+.rpt-back-btn:hover {
+  background: #e2e8f0;
+}
 
 .rpt-event-selector {
   display: flex;
@@ -70,7 +72,9 @@
   outline: none;
 }
 
-.rpt-select:focus { border-color: #6c63ff; }
+.rpt-select:focus {
+  border-color: #6c63ff;
+}
 
 .rpt-select-loading {
   font-size: 14px;
@@ -80,8 +84,8 @@
 .rpt-error {
   margin: 0 32px 20px;
   padding: 12px 16px;
-  background: rgba(239,68,68,0.08);
-  border: 1px solid rgba(239,68,68,0.2);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: 10px;
   color: #ef4444;
   font-size: 14px;
@@ -105,14 +109,18 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .rpt-section {
   margin: 0 32px 28px;
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .rpt-section-title {
@@ -141,14 +149,39 @@
   transition: transform 0.2s;
 }
 
-.rpt-stat-card:hover { transform: translateY(-2px); }
+.rpt-stat-card:hover {
+  transform: translateY(-2px);
+}
 
-.rpt-stat-card.revenue { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #fcd34d; }
-.rpt-stat-card.tickets { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-color: #93c5fd; }
-.rpt-stat-card.orders { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-color: #a5b4fc; }
-.rpt-stat-card.buyers { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: #6ee7b7; }
-.rpt-stat-card.checkin { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #86efac; }
-.rpt-stat-card.rate { background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-color: #f9a8d4; }
+.rpt-stat-card.revenue {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #fcd34d;
+}
+
+.rpt-stat-card.tickets {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-color: #93c5fd;
+}
+
+.rpt-stat-card.orders {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  border-color: #a5b4fc;
+}
+
+.rpt-stat-card.buyers {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border-color: #6ee7b7;
+}
+
+.rpt-stat-card.checkin {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.rpt-stat-card.rate {
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+  border-color: #f9a8d4;
+}
 
 .rpt-stat-icon {
   font-size: 28px;
@@ -217,7 +250,9 @@
   cursor: pointer;
 }
 
-.rpt-bar:hover { opacity: 0.8; }
+.rpt-bar:hover {
+  opacity: 0.8;
+}
 
 .rpt-bar-value {
   font-size: 9px;
@@ -254,7 +289,9 @@
   color: #475569;
 }
 
-.rpt-chart-row strong { color: #1e293b; }
+.rpt-chart-row strong {
+  color: #1e293b;
+}
 
 /* Table */
 .rpt-table-wrapper {
@@ -286,13 +323,27 @@
   color: #374151;
 }
 
-.rpt-table tr:hover td { background: #f8fafc; }
+.rpt-table tr:hover td {
+  background: #f8fafc;
+}
 
-.rpt-td-center { text-align: center; }
-.rpt-td-name { font-weight: 600; color: #1e293b; }
-.rpt-td-money { font-weight: 600; color: #10b981; }
+.rpt-td-center {
+  text-align: center;
+}
 
-.rpt-td-percent { min-width: 160px; }
+.rpt-td-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.rpt-td-money {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.rpt-td-percent {
+  min-width: 160px;
+}
 
 .rpt-percent-bar {
   display: flex;
@@ -300,7 +351,7 @@
   gap: 8px;
 }
 
-.rpt-percent-bar > div {
+.rpt-percent-bar>div {
   flex: 1;
   height: 8px;
   background: #e2e8f0;
@@ -331,12 +382,31 @@
   color: #94a3b8;
 }
 
-.rpt-placeholder span { font-size: 48px; }
-.rpt-placeholder p { font-size: 16px; }
+.rpt-placeholder span {
+  font-size: 48px;
+}
+
+.rpt-placeholder p {
+  font-size: 16px;
+}
 
 @media (max-width: 768px) {
-  .rpt-header { padding: 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .rpt-section { margin: 0 16px 20px; }
-  .rpt-event-selector { padding: 0 16px 16px; }
-  .rpt-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .rpt-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .rpt-section {
+    margin: 0 16px 20px;
+  }
+
+  .rpt-event-selector {
+    padding: 0 16px 16px;
+  }
+
+  .rpt-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

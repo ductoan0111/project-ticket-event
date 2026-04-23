@@ -32,6 +32,12 @@ const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
   'health': { icon: '🏃', color: '#10b981' },
   'du lịch': { icon: '✈️', color: '#f97316' },
   'travel': { icon: '✈️', color: '#f97316' },
+  'thời trang': { icon: '👗', color: '#ec4899' },
+  'fashion': { icon: '👗', color: '#ec4899' },
+  'cộng đồng': { icon: '🤝', color: '#8b5cf6' },
+  'community': { icon: '🤝', color: '#8b5cf6' },
+  'giải trí': { icon: '🎪', color: '#ef4444' },
+  'entertainment': { icon: '🎪', color: '#ef4444' },
 };
 
 const DEFAULT_COLORS = ['#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#3b82f6', '#f97316'];

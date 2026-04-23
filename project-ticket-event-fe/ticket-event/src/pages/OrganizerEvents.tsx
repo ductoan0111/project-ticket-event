@@ -231,7 +231,7 @@ export default function OrganizerEvents() {
             {filteredEvents.map(ev => {
               const s = STATUS_MAP[ev.trangThai] ?? STATUS_MAP[0];
               const canEdit = ev.trangThai === 0;
-              const canDelete = ev.trangThai !== 2 && ev.trangThai !== 3;
+              const canDelete = ev.trangThai !== 2; // Chỉ không cho xóa khi đang diễn ra
 
               return (
                 <div key={ev.suKienID} className="oe-card">

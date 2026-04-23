@@ -8,9 +8,9 @@ class AuthService {
     try {
       console.log('Calling login API:', `${LOGIN_API_URL}/Auth/login`);
       console.log('Credentials:', credentials);
-      
+
       const response = await api.post<LoginResponse>(`${LOGIN_API_URL}/Auth/login`, credentials);
-      
+
       console.log('Login success:', response.data);
       this.setTokens(response.data.accessToken, response.data.refreshToken);
       return response.data;
@@ -25,9 +25,9 @@ class AuthService {
     try {
       console.log('Calling register API:', `${LOGIN_API_URL}/Auth/register`);
       console.log('User data:', userData);
-      
+
       await api.post(`${LOGIN_API_URL}/Auth/register`, userData);
-      
+
       console.log('Register success');
     } catch (error: any) {
       console.error('Register error:', error);

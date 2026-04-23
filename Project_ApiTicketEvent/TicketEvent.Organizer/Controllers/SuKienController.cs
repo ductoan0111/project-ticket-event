@@ -159,23 +159,13 @@ namespace TicketEvent.Organizer.Controllers
                 return NotFound(new { message = $"Không tìm thấy sự kiện với ID: {id}" });
             }
 
-            // Kiểm tra trạng thái - không cho xóa sự kiện đã bắt đầu hoặc đang diễn ra
+            // Chỉ kiểm tra trạng thái - không cho xóa sự kiện đang diễn ra
             if (existingSuKien.TrangThai == 2) // Đang diễn ra
             {
                 return BadRequest(new { message = "Không thể xóa sự kiện đang diễn ra" });
             }
 
-            if (existingSuKien.TrangThai == 3) // Đã kết thúc
-            {
-                return BadRequest(new { message = "Không thể xóa sự kiện đã kết thúc" });
-            }
-
-            // Kiểm tra thời gian - không cho xóa nếu sự kiện đã bắt đầu
-            if (existingSuKien.ThoiGianBatDau <= DateTime.Now)
-            {
-                return BadRequest(new { message = "Không thể xóa sự kiện đã bắt đầu hoặc đang diễn ra" });
-            }
-
+            // Cho phép xóa các sự kiện khác (Chờ duyệt, Đã duyệt, Đã kết thúc, Đã hủy)
             var success = await _service.DeleteAsync(id);
 
             if (!success)

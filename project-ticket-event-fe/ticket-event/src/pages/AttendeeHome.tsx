@@ -21,10 +21,14 @@ const AttendeeHome = () => {
   const navigate = useNavigate();
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [popularEvents, setPopularEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]); // Lưu tất cả events
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]); // Events sau khi lọc
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false); // Đang ở chế độ tìm kiếm
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [isFilteringByCategory, setIsFilteringByCategory] = useState(false); // Đang lọc theo danh mục
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [favoriteCounts, setFavoriteCounts] = useState<Map<number, number>>(new Map());
@@ -88,6 +92,15 @@ const AttendeeHome = () => {
 
       setUpcomingEvents(enrichedUpcoming);
       setPopularEvents(enrichedPopular);
+      
+      // Lưu tất cả events để tìm kiếm
+      const combined = [...enrichedUpcoming, ...enrichedPopular];
+      // Loại bỏ duplicate dựa trên suKienID
+      const uniqueEvents = Array.from(
+        new Map(combined.map(e => [e.suKienID, e])).values()
+      );
+      setAllEvents(uniqueEvents);
+      
       setCategories(Array.isArray(cats) ? cats : []);
       setFavoriteIds(new Set(Array.isArray(favIds) ? favIds : []));
       setUnreadCount(unread || 0);
@@ -139,9 +152,39 @@ const AttendeeHome = () => {
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/events/search?q=${encodeURIComponent(searchQuery)}`);
+    const query = searchQuery.trim().toLowerCase();
+    
+    if (!query) {
+      // Nếu ô tìm kiếm trống, thoát chế độ tìm kiếm
+      setIsSearching(false);
+      setFilteredEvents([]);
+      return;
     }
+
+    // Lọc events theo tên
+    const results = allEvents.filter(event => 
+      event.tenSuKien.toLowerCase().includes(query) ||
+      (event.moTa && event.moTa.toLowerCase().includes(query)) ||
+      (event.tenDanhMuc && event.tenDanhMuc.toLowerCase().includes(query)) ||
+      (event.tenDiaDiem && event.tenDiaDiem.toLowerCase().includes(query))
+    );
+
+    setFilteredEvents(results);
+    setIsSearching(true);
+    
+    if (results.length === 0) {
+      showToast(`Không tìm thấy sự kiện nào với từ khóa "${searchQuery}"`);
+    } else {
+      showToast(`Tìm thấy ${results.length} sự kiện`);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearching(false);
+    setFilteredEvents([]);
+    setActiveCategory(null);
+    setIsFilteringByCategory(false);
   };
 
   const handleLogout = () => {
@@ -155,8 +198,29 @@ const AttendeeHome = () => {
     navigate(`/events/${eventId}`);
   };
   const handleCategoryClick = (categoryId: number) => {
-    setActiveCategory(prev => prev === categoryId ? null : categoryId);
-    navigate(`/events?category=${categoryId}`);
+    // Nếu click vào danh mục đang active, thì bỏ lọc
+    if (activeCategory === categoryId) {
+      setActiveCategory(null);
+      setIsFilteringByCategory(false);
+      setFilteredEvents([]);
+      return;
+    }
+
+    // Lọc events theo danh mục
+    setActiveCategory(categoryId);
+    setIsFilteringByCategory(true);
+    setIsSearching(false); // Tắt chế độ tìm kiếm
+    setSearchQuery(''); // Xóa search query
+
+    const results = allEvents.filter(event => event.danhMucID === categoryId);
+    setFilteredEvents(results);
+
+    if (results.length === 0) {
+      const categoryName = categories.find(c => c.danhMucID === categoryId)?.tenDanhMuc || 'danh mục này';
+      showToast(`Không có sự kiện nào trong ${categoryName}`);
+    } else {
+      showToast(`Tìm thấy ${results.length} sự kiện`);
+    }
   };
 
   const formatDate = (dateString: string | null | undefined) => {
@@ -286,7 +350,7 @@ const AttendeeHome = () => {
                 onClick={(e) => handleBookTicket(event.suKienID, e)}
               >
                 <Ticket size={15} />
-                <span>Đặt vé ngay</span>
+                <span>Đặt vé</span>
               </button>
             )}
           </div>
@@ -422,7 +486,12 @@ const AttendeeHome = () => {
                 className="ah-search-input"
               />
               {searchQuery && (
-                <button type="button" className="ah-search-clear" onClick={() => setSearchQuery('')}>✕</button>
+                <button 
+                  type="button" 
+                  className="ah-search-clear" 
+                  onClick={handleClearSearch}
+                  title="Xóa tìm kiếm"
+                >✕</button>
               )}
             </div>
             <button type="submit" className="ah-search-btn">
@@ -484,8 +553,48 @@ const AttendeeHome = () => {
       {/* ===== MAIN ===== */}
       <main className="ah-main">
 
-        {/* CATEGORIES từ API */}
-        {categories.length > 0 && (
+        {/* KẾT QUẢ TÌM KIẾM */}
+        {isSearching && (
+          <section className="ah-section">
+            {filteredEvents.length === 0 ? (
+              <div className="ah-empty">
+                <Search size={56} />
+                <h3>Không tìm thấy sự kiện nào</h3>
+                <p>Thử tìm kiếm với từ khóa khác hoặc xem các sự kiện đề xuất bên dưới</p>
+                <button className="ah-empty-btn" onClick={handleClearSearch}>
+                  Xem tất cả sự kiện
+                </button>
+              </div>
+            ) : (
+              <div className="ah-events-grid">
+                {filteredEvents.map((ev, i) => renderEventCard(ev, i, 'hot'))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* KẾT QUẢ LỌC THEO DANH MỤC */}
+        {isFilteringByCategory && !isSearching && (
+          <section className="ah-section">
+            {filteredEvents.length === 0 ? (
+              <div className="ah-empty">
+                <Tag size={56} />
+                <h3>Không có sự kiện nào</h3>
+                <p>Chưa có sự kiện nào trong danh mục này</p>
+                <button className="ah-empty-btn" onClick={handleClearSearch}>
+                  Xem tất cả sự kiện
+                </button>
+              </div>
+            ) : (
+              <div className="ah-events-grid">
+                {filteredEvents.map((ev, i) => renderEventCard(ev, i, 'hot'))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* CATEGORIES từ API - Ẩn khi đang tìm kiếm hoặc lọc */}
+        {!isSearching && !isFilteringByCategory && categories.length > 0 && (
           <section className="ah-section">
             <div className="ah-section-head">
               <div>
@@ -518,7 +627,8 @@ const AttendeeHome = () => {
           </section>
         )}
 
-        {/* UPCOMING EVENTS */}
+        {/* UPCOMING EVENTS - Ẩn khi đang tìm kiếm hoặc lọc */}
+        {!isSearching && !isFilteringByCategory && (
         <section className="ah-section">
           <div className="ah-section-head">
             <div>
@@ -556,8 +666,10 @@ const AttendeeHome = () => {
             </div>
           )}
         </section>
+        )}
 
-        {/* POPULAR EVENTS */}
+        {/* POPULAR EVENTS - Ẩn khi đang tìm kiếm hoặc lọc */}
+        {!isSearching && !isFilteringByCategory && (
         <section className="ah-section">
           <div className="ah-section-head">
             <div>
@@ -595,8 +707,10 @@ const AttendeeHome = () => {
             </div>
           )}
         </section>
+        )}
 
-        {/* PROMO BANNER */}
+        {/* PROMO BANNER - Ẩn khi đang tìm kiếm hoặc lọc */}
+        {!isSearching && !isFilteringByCategory && (
         <section className="ah-promo-banner">
           <div className="ah-promo-bg">
             <div className="ah-promo-orb-1" />
@@ -624,6 +738,7 @@ const AttendeeHome = () => {
             </div>
           </div>
         </section>
+        )}
       </main>
 
       {/* ===== FOOTER ===== */}

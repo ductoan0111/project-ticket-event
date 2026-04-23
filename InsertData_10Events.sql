@@ -146,6 +146,7 @@ GO
 
 -- ================================================
 -- 6. LOAI VE (Ticket Types) - Cho 10 sự kiện
+-- Bao gồm đầy đủ: GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan
 -- ================================================
 
 -- Sự kiện 1: Hội thảo AI (3 loại vé)
@@ -155,55 +156,55 @@ INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuong
 (1, N'Vé VIP', N'Ghế hàng đầu, gặp gỡ diễn giả, quà tặng đặc biệt', 1500000, 50, 18, 2, '2026-03-01 00:00:00', '2026-06-14 23:59:59', 1);
 
 -- Sự kiện 2: Concert (3 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, TrangThai) VALUES
-(2, N'Vé Phổ thông', N'Khu vực đứng, tầm nhìn tốt', 300000, 400, 180, 10, 1),
-(2, N'Vé VIP', N'Ghế ngồi gần sân khấu, đồ uống miễn phí', 800000, 100, 42, 4, 1),
-(2, N'Vé SVIP', N'Ghế hàng đầu, meet & greet ca sĩ, ảnh ký tặng', 1500000, 30, 12, 2, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(2, N'Vé Phổ thông', N'Khu vực đứng, tầm nhìn tốt', 300000, 400, 180, 10, '2026-05-01 00:00:00', '2026-07-19 23:59:59', 1),
+(2, N'Vé VIP', N'Ghế ngồi gần sân khấu, đồ uống miễn phí', 800000, 100, 42, 4, '2026-05-01 00:00:00', '2026-07-19 23:59:59', 1),
+(2, N'Vé SVIP', N'Ghế hàng đầu, meet & greet ca sĩ, ảnh ký tặng', 1500000, 30, 12, 2, '2026-05-01 00:00:00', '2026-07-19 23:59:59', 1);
 
 -- Sự kiện 3: Marathon (4 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, TrangThai) VALUES
-(3, N'Vé 5km', N'Cự ly 5km, phù hợp mọi lứa tuổi', 150000, 500, 230, 10, 1),
-(3, N'Vé 10km', N'Cự ly 10km, runner trung bình', 200000, 400, 180, 10, 1),
-(3, N'Vé 21km', N'Half Marathon, runner có kinh nghiệm', 300000, 300, 95, 5, 1),
-(3, N'Vé 42km', N'Full Marathon, runner chuyên nghiệp', 500000, 200, 68, 3, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(3, N'Vé 5km', N'Cự ly 5km, phù hợp mọi lứa tuổi', 150000, 500, 230, 10, '2026-06-01 00:00:00', '2026-08-09 23:59:59', 1),
+(3, N'Vé 10km', N'Cự ly 10km, runner trung bình', 200000, 400, 180, 10, '2026-06-01 00:00:00', '2026-08-09 23:59:59', 1),
+(3, N'Vé 21km', N'Half Marathon, runner có kinh nghiệm', 300000, 300, 95, 5, '2026-06-01 00:00:00', '2026-08-09 23:59:59', 1),
+(3, N'Vé 42km', N'Full Marathon, runner chuyên nghiệp', 500000, 200, 68, 3, '2026-06-01 00:00:00', '2026-08-09 23:59:59', 1);
 
 -- Sự kiện 4: Hội nghị Khởi nghiệp (2 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(4, N'Vé Startup', N'Dành cho founder, co-founder', 200000, 200, 85, 1),
-(4, N'Vé Investor', N'Dành cho nhà đầu tư, quỹ đầu tư', 500000, 50, 22, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(4, N'Vé Startup', N'Dành cho founder, co-founder', 200000, 200, 85, 3, '2026-07-01 00:00:00', '2026-09-04 23:59:59', 1),
+(4, N'Vé Investor', N'Dành cho nhà đầu tư, quỹ đầu tư', 500000, 50, 22, 2, '2026-07-01 00:00:00', '2026-09-04 23:59:59', 1);
 
 -- Sự kiện 5: Lễ hội Ẩm thực (2 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(5, N'Vé 1 ngày', N'Tham gia 1 ngày bất kỳ', 100000, 500, 245, 1),
-(5, N'Vé 3 ngày', N'Trọn gói 3 ngày, tiết kiệm 20%', 240000, 300, 128, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(5, N'Vé 1 ngày', N'Tham gia 1 ngày bất kỳ', 100000, 500, 245, 5, '2026-08-01 00:00:00', '2026-09-30 23:59:59', 1),
+(5, N'Vé 3 ngày', N'Trọn gói 3 ngày, tiết kiệm 20%', 240000, 300, 128, 3, '2026-08-01 00:00:00', '2026-09-30 23:59:59', 1);
 
 -- Sự kiện 6: Triển lãm (Miễn phí)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(6, N'Vé Miễn phí', N'Đăng ký để nhận vé tham quan miễn phí', 0, 1000, 342, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(6, N'Vé Miễn phí', N'Đăng ký để nhận vé tham quan miễn phí', 0, 1000, 342, 4, '2026-09-01 00:00:00', '2026-11-29 23:59:59', 1);
 
 -- Sự kiện 7: Festival EDM (3 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(7, N'Vé Thường', N'Khu vực đứng, không giới hạn', 400000, 1000, 456, 1),
-(7, N'Vé VIP', N'Khu vực gần sân khấu, đồ uống free', 800000, 200, 89, 1),
-(7, N'Vé SVIP', N'Khu vực đặc biệt, all inclusive', 1500000, 50, 23, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(7, N'Vé Thường', N'Khu vực đứng, không giới hạn', 400000, 1000, 456, 8, '2026-10-01 00:00:00', '2026-12-24 23:59:59', 1),
+(7, N'Vé VIP', N'Khu vực gần sân khấu, đồ uống free', 800000, 200, 89, 4, '2026-10-01 00:00:00', '2026-12-24 23:59:59', 1),
+(7, N'Vé SVIP', N'Khu vực đặc biệt, all inclusive', 1500000, 50, 23, 2, '2026-10-01 00:00:00', '2026-12-24 23:59:59', 1);
 
 -- Sự kiện 8: Blockchain (2 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(8, N'Vé Thường', N'Tham dự diễn đàn, tài liệu', 300000, 300, 145, 1),
-(8, N'Vé VIP', N'Ghế đầu, networking lunch, quà tặng', 800000, 100, 38, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(8, N'Vé Thường', N'Tham dự diễn đàn, tài liệu', 300000, 300, 145, 5, '2026-11-01 00:00:00', '2027-01-19 23:59:59', 1),
+(8, N'Vé VIP', N'Ghế đầu, networking lunch, quà tặng', 800000, 100, 38, 3, '2026-11-01 00:00:00', '2027-01-19 23:59:59', 1);
 
 -- Sự kiện 9: Hội chợ Du lịch (2 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(9, N'Vé 1 ngày', N'Tham quan 1 ngày', 50000, 1000, 523, 1),
-(9, N'Vé 3 ngày', N'Trọn gói 3 ngày', 120000, 500, 267, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(9, N'Vé 1 ngày', N'Tham quan 1 ngày', 50000, 1000, 523, 6, '2026-12-01 00:00:00', '2027-02-09 23:59:59', 1),
+(9, N'Vé 3 ngày', N'Trọn gói 3 ngày', 120000, 500, 267, 4, '2026-12-01 00:00:00', '2027-02-09 23:59:59', 1);
 
 -- Sự kiện 10: Liveshow (3 loại vé)
-INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, TrangThai) VALUES
-(10, N'Vé Phổ thông', N'Khu vực đứng', 350000, 500, 234, 1),
-(10, N'Vé VIP', N'Ghế ngồi gần sân khấu', 700000, 150, 67, 1),
-(10, N'Vé SVIP', N'Ghế hàng đầu, fan meeting', 1200000, 50, 28, 1);
+INSERT INTO dbo.LoaiVe (SuKienID, TenLoaiVe, MoTa, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan, TrangThai) VALUES
+(10, N'Vé Phổ thông', N'Khu vực đứng', 350000, 500, 234, 8, '2027-01-01 00:00:00', '2027-03-14 23:59:59', 1),
+(10, N'Vé VIP', N'Ghế ngồi gần sân khấu', 700000, 150, 67, 4, '2027-01-01 00:00:00', '2027-03-14 23:59:59', 1),
+(10, N'Vé SVIP', N'Ghế hàng đầu, fan meeting', 1200000, 50, 28, 2, '2027-01-01 00:00:00', '2027-03-14 23:59:59', 1);
 
-PRINT '✓ Đã insert LoaiVe (27 records)';
+PRINT '✓ Đã insert LoaiVe (27 records với đầy đủ thông tin)';
 GO
 
 -- ================================================
@@ -251,7 +252,7 @@ PRINT '- Người dùng: 8 (1 Admin, 2 Organizer, 3 Attendee, 2 Staff)';
 PRINT '- Địa điểm: 10';
 PRINT '- Danh mục: 8';
 PRINT '- Sự kiện: 10 (tất cả đang mở bán)';
-PRINT '- Loại vé: 27';
+PRINT '- Loại vé: 27 (đầy đủ GioiHanMoiKhach, ThoiGianMoBan, ThoiGianDongBan)';
 PRINT '- Yêu thích: 11';
 PRINT '';
 PRINT '🔐 Tài khoản test (mật khẩu cần đăng ký qua API):';

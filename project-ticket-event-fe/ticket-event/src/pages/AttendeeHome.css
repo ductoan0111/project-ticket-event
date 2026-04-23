@@ -810,23 +810,36 @@
 }
 
 .btn-book {
-  display: flex; align-items: center; gap: 6px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 100%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
-  border: none; padding: 8px 16px;
+  border: none; 
+  padding: 12px 24px;
   border-radius: 10px;
-  font-weight: 700; font-size: 13px;
+  font-weight: 700; 
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.22s ease;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  white-space: nowrap;
 }
+
 .btn-book:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
 }
+
+.btn-book svg {
+  width: 18px;
+  height: 18px;
+}
+
 .btn-book-full {
   width: 100%;
-  justify-content: center;
 }
 
 /* ===== SKELETON ===== */
@@ -862,7 +875,24 @@
 }
 .ah-empty svg { opacity: 0.35; }
 .ah-empty h3 { font-size: 20px; font-weight: 700; color: #475569; margin: 0; }
-.ah-empty p { font-size: 15px; margin: 0; }
+.ah-empty p { font-size: 15px; margin: 0; max-width: 500px; }
+.ah-empty-btn {
+  margin-top: 12px;
+  background: linear-gradient(135deg, #6c63ff, #a855f7);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(108,99,255,0.3);
+}
+.ah-empty-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(108,99,255,0.4);
+}
 
 /* ===== PROMO BANNER ===== */
 .ah-promo-banner {

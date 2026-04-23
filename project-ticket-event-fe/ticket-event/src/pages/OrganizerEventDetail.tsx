@@ -32,7 +32,7 @@ export default function OrganizerEventDetail() {
   const [loading, setLoading] = useState(true);
   const [loaiVes, setLoaiVes] = useState<OrgLoaiVe[]>([]);
   const [lvLoading, setLvLoading] = useState(false);
-  
+
   // Modal states
   const [showLvModal, setShowLvModal] = useState(false);
   const [editLv, setEditLv] = useState<OrgLoaiVe | null>(null);
@@ -40,7 +40,7 @@ export default function OrganizerEventDetail() {
   const [lvSubmitting, setLvSubmitting] = useState(false);
   const [lvFormError, setLvFormError] = useState<string | null>(null);
   const [deleteLvId, setDeleteLvId] = useState<number | null>(null);
-  
+
   // Toast
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function OrganizerEventDetail() {
       setLoading(true);
       const ev = await organizerService.getEventById(suKienId);
       setEvent(ev);
-      
+
       if (ev) {
         await loadLoaiVe();
       }
@@ -116,7 +116,7 @@ export default function OrganizerEventDetail() {
   const handleLvSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLvFormError(null);
-    
+
     if (!lvForm.tenLoaiVe.trim()) {
       return setLvFormError('Tên loại vé không được để trống.');
     }
@@ -212,99 +212,99 @@ export default function OrganizerEventDetail() {
 
       {/* Breadcrumb */}
       <div className="oed-breadcrumb">
-          <button onClick={() => navigate('/organizer')}>Dashboard</button>
-          <span>›</span>
-          <button onClick={() => navigate('/organizer/events')}>Sự kiện</button>
-          <span>›</span>
-          <span className="oed-breadcrumb-current">{event.tenSuKien}</span>
-        </div>
+        <button onClick={() => navigate('/organizer')}>Dashboard</button>
+        <span>›</span>
+        <button onClick={() => navigate('/organizer/events')}>Sự kiện</button>
+        <span>›</span>
+        <span className="oed-breadcrumb-current">{event.tenSuKien}</span>
+      </div>
 
-        {/* Event Hero */}
-        <div className="oed-hero">
-          {event.anhBiaUrl && (
-            <div className="oed-hero-img">
-              <img src={event.anhBiaUrl} alt={event.tenSuKien} />
-            </div>
-          )}
-          <div className="oed-hero-info">
-            <span className="oed-hero-status" style={{ color: s.color, background: s.bg }}>
-              {s.label}
-            </span>
-            <h1 className="oed-hero-title">{event.tenSuKien}</h1>
-            <div className="oed-hero-meta">
-              <span>📅 {formatDate(event.thoiGianBatDau)} – {formatDate(event.thoiGianKetThuc)}</span>
-              {event.moTa && <p className="oed-hero-desc">{event.moTa}</p>}
-            </div>
+      {/* Event Hero */}
+      <div className="oed-hero">
+        {event.anhBiaUrl && (
+          <div className="oed-hero-img">
+            <img src={event.anhBiaUrl} alt={event.tenSuKien} />
+          </div>
+        )}
+        <div className="oed-hero-info">
+          <span className="oed-hero-status" style={{ color: s.color, background: s.bg }}>
+            {s.label}
+          </span>
+          <h1 className="oed-hero-title">{event.tenSuKien}</h1>
+          <div className="oed-hero-meta">
+            <span>📅 {formatDate(event.thoiGianBatDau)} – {formatDate(event.thoiGianKetThuc)}</span>
+            {event.moTa && <p className="oed-hero-desc">{event.moTa}</p>}
           </div>
         </div>
+      </div>
 
-        {/* Loại vé section */}
-        <div className="oed-tab-content">
-          <div className="tab-header">
-            <h2>🎟️ Loại vé ({loaiVes.length})</h2>
+      {/* Loại vé section */}
+      <div className="oed-tab-content">
+        <div className="tab-header">
+          <h2>🎟️ Loại vé ({loaiVes.length})</h2>
+          <button className="tab-btn-primary" onClick={openCreateLv}>
+            + Thêm loại vé
+          </button>
+        </div>
+
+        {lvLoading ? (
+          <div className="tab-loading"><div className="oed-spinner" /></div>
+        ) : loaiVes.length === 0 ? (
+          <div className="tab-empty">
+            <span style={{ fontSize: '48px' }}>🎟️</span>
+            <p>Chưa có loại vé nào</p>
             <button className="tab-btn-primary" onClick={openCreateLv}>
-              + Thêm loại vé
+              Tạo loại vé đầu tiên
             </button>
           </div>
-
-          {lvLoading ? (
-            <div className="tab-loading"><div className="oed-spinner" /></div>
-          ) : loaiVes.length === 0 ? (
-            <div className="tab-empty">
-              <span style={{ fontSize: '48px' }}>🎟️</span>
-              <p>Chưa có loại vé nào</p>
-              <button className="tab-btn-primary" onClick={openCreateLv}>
-                Tạo loại vé đầu tiên
-              </button>
-            </div>
-          ) : (
-            <div className="lv-grid">
-              {loaiVes.map(lv => (
-                <div key={lv.loaiVeID} className="lv-card">
-                  <div className="lv-card-header">
-                    <h3>{lv.tenLoaiVe}</h3>
-                    <span className={`lv-status ${lv.trangThai ? 'active' : 'inactive'}`}>
-                      {lv.trangThai ? 'Đang bán' : 'Tạm dừng'}
-                    </span>
+        ) : (
+          <div className="lv-grid">
+            {loaiVes.map(lv => (
+              <div key={lv.loaiVeID} className="lv-card">
+                <div className="lv-card-header">
+                  <h3>{lv.tenLoaiVe}</h3>
+                  <span className={`lv-status ${lv.trangThai ? 'active' : 'inactive'}`}>
+                    {lv.trangThai ? 'Đang bán' : 'Tạm dừng'}
+                  </span>
+                </div>
+                {lv.moTa && <p className="lv-desc">{lv.moTa}</p>}
+                <div className="lv-price">{formatCurrency(lv.donGia)}</div>
+                <div className="lv-progress">
+                  <div className="lv-progress-info">
+                    <span>Đã bán: {lv.soLuongDaBan}/{lv.soLuongToiDa}</span>
+                    <span>{lv.phanTramDaBan}%</span>
                   </div>
-                  {lv.moTa && <p className="lv-desc">{lv.moTa}</p>}
-                  <div className="lv-price">{formatCurrency(lv.donGia)}</div>
-                  <div className="lv-progress">
-                    <div className="lv-progress-info">
-                      <span>Đã bán: {lv.soLuongDaBan}/{lv.soLuongToiDa}</span>
-                      <span>{lv.phanTramDaBan}%</span>
-                    </div>
-                    <div className="lv-progress-bar">
-                      <div
-                        className="lv-progress-fill"
-                        style={{ width: `${Math.min(lv.phanTramDaBan, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="lv-meta">
-                    <span>Còn lại: <strong>{lv.soLuongCon}</strong></span>
-                    {lv.gioiHanMoiKhach && (
-                      <span>Giới hạn/khách: <strong>{lv.gioiHanMoiKhach}</strong></span>
-                    )}
-                  </div>
-                  <div className="lv-actions">
-                    <button className="lv-btn-edit" onClick={() => openEditLv(lv)}>
-                      ✏️ Sửa
-                    </button>
-                    {lv.soLuongDaBan === 0 && (
-                      <button className="lv-btn-delete" onClick={() => setDeleteLvId(lv.loaiVeID)}>
-                        🗑️ Xóa
-                      </button>
-                    )}
+                  <div className="lv-progress-bar">
+                    <div
+                      className="lv-progress-fill"
+                      style={{ width: `${Math.min(lv.phanTramDaBan, 100)}%` }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="lv-meta">
+                  <span>Còn lại: <strong>{lv.soLuongCon}</strong></span>
+                  {lv.gioiHanMoiKhach && (
+                    <span>Giới hạn/khách: <strong>{lv.gioiHanMoiKhach}</strong></span>
+                  )}
+                </div>
+                <div className="lv-actions">
+                  <button className="lv-btn-edit" onClick={() => openEditLv(lv)}>
+                    ✏️ Sửa
+                  </button>
+                  {lv.soLuongDaBan === 0 && (
+                    <button className="lv-btn-delete" onClick={() => setDeleteLvId(lv.loaiVeID)}>
+                      🗑️ Xóa
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* ===== LOAI VE MODAL ===== */}
-        {showLvModal && (
+      {/* ===== LOAI VE MODAL ===== */}
+      {showLvModal && (
         <div className="oe-modal-overlay" onClick={() => setShowLvModal(false)}>
           <div className="oe-modal" onClick={e => e.stopPropagation()}>
             <div className="oe-modal-header">
@@ -313,7 +313,7 @@ export default function OrganizerEventDetail() {
             </div>
             <form onSubmit={handleLvSubmit} className="oe-form">
               {lvFormError && <div className="oe-form-error">⚠️ {lvFormError}</div>}
-              
+
               <div className="oe-form-group">
                 <label>Tên loại vé *</label>
                 <input

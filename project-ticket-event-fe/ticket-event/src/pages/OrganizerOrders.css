@@ -39,7 +39,9 @@
   transition: all 0.2s;
 }
 
-.ord-back-btn:hover { background: #e2e8f0; }
+.ord-back-btn:hover {
+  background: #e2e8f0;
+}
 
 .ord-event-selector {
   display: flex;
@@ -69,7 +71,9 @@
   transition: border-color 0.2s;
 }
 
-.ord-select:focus { border-color: #6c63ff; }
+.ord-select:focus {
+  border-color: #6c63ff;
+}
 
 /* Stats */
 .ord-stats {
@@ -90,18 +94,44 @@
   background: white;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s;
 }
 
-.ord-stat-card:hover { transform: translateY(-2px); }
-.ord-stat-card.success { border-color: #6ee7b7; background: linear-gradient(135deg, #d1fae5, #ecfdf5); }
-.ord-stat-card.cancel { border-color: #fca5a5; background: linear-gradient(135deg, #fee2e2, #fef2f2); }
-.ord-stat-card.revenue { border-color: #fcd34d; background: linear-gradient(135deg, #fef3c7, #fffbeb); }
+.ord-stat-card:hover {
+  transform: translateY(-2px);
+}
 
-.ord-stat-icon { font-size: 24px; }
-.ord-stat-value { font-size: 20px; font-weight: 800; color: #1e293b; }
-.ord-stat-label { font-size: 12px; color: #64748b; font-weight: 500; }
+.ord-stat-card.success {
+  border-color: #6ee7b7;
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+}
+
+.ord-stat-card.cancel {
+  border-color: #fca5a5;
+  background: linear-gradient(135deg, #fee2e2, #fef2f2);
+}
+
+.ord-stat-card.revenue {
+  border-color: #fcd34d;
+  background: linear-gradient(135deg, #fef3c7, #fffbeb);
+}
+
+.ord-stat-icon {
+  font-size: 24px;
+}
+
+.ord-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.ord-stat-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
 
 /* Filters */
 .ord-filters {
@@ -124,7 +154,9 @@
   background: white;
 }
 
-.ord-search:focus { border-color: #6c63ff; }
+.ord-search:focus {
+  border-color: #6c63ff;
+}
 
 .ord-status-filters {
   display: flex;
@@ -145,11 +177,21 @@
   white-space: nowrap;
 }
 
-.ord-filter-btn:hover { border-color: #cbd5e1; color: #1e293b; }
-.ord-filter-btn.active { background: #6c63ff; border-color: #6c63ff; color: white; }
+.ord-filter-btn:hover {
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.ord-filter-btn.active {
+  background: #6c63ff;
+  border-color: #6c63ff;
+  color: white;
+}
 
 /* Loading / empty */
-.ord-loading, .ord-placeholder, .ord-empty {
+.ord-loading,
+.ord-placeholder,
+.ord-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -158,8 +200,16 @@
   color: #94a3b8;
 }
 
-.ord-loading p, .ord-placeholder p, .ord-empty p { font-size: 15px; }
-.ord-placeholder span, .ord-empty span { font-size: 48px; }
+.ord-loading p,
+.ord-placeholder p,
+.ord-empty p {
+  font-size: 15px;
+}
+
+.ord-placeholder span,
+.ord-empty span {
+  font-size: 48px;
+}
 
 .ord-spinner {
   width: 36px;
@@ -170,7 +220,11 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Table */
 .ord-table-wrapper {
@@ -178,7 +232,7 @@
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
   border: 1px solid #e2e8f0;
 }
 
@@ -207,11 +261,24 @@
   vertical-align: middle;
 }
 
-.ord-table tr:last-child td { border-bottom: none; }
-.ord-table tr:hover td { background: #f8fafc; }
+.ord-table tr:last-child td {
+  border-bottom: none;
+}
 
-.ord-td-id { font-family: monospace; font-weight: 600; color: #6c63ff; }
-.ord-td-money { font-weight: 700; color: #10b981; }
+.ord-table tr:hover td {
+  background: #f8fafc;
+}
+
+.ord-td-id {
+  font-family: monospace;
+  font-weight: 600;
+  color: #6c63ff;
+}
+
+.ord-td-money {
+  font-weight: 700;
+  color: #10b981;
+}
 
 .ord-customer {
   display: flex;
@@ -265,13 +332,16 @@
   transition: all 0.2s;
 }
 
-.ord-btn-detail:hover { opacity: 0.9; transform: translateY(-1px); }
+.ord-btn-detail:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
 
 /* Modal */
 .ord-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,0.5);
+  background: rgba(15, 23, 42, 0.5);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -287,7 +357,7 @@
   max-width: 560px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .ord-modal-header {
@@ -302,7 +372,12 @@
   border-radius: 20px 20px 0 0;
 }
 
-.ord-modal-header h2 { font-size: 20px; font-weight: 700; color: #1e293b; margin: 0; }
+.ord-modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
 
 .ord-modal-close {
   background: #f1f5f9;
@@ -319,7 +394,9 @@
   transition: all 0.2s;
 }
 
-.ord-modal-close:hover { background: #e2e8f0; }
+.ord-modal-close:hover {
+  background: #e2e8f0;
+}
 
 .ord-modal-loading {
   display: flex;
@@ -327,7 +404,9 @@
   padding: 40px;
 }
 
-.ord-modal-body { padding: 24px 28px; }
+.ord-modal-body {
+  padding: 24px 28px;
+}
 
 .ord-detail-grid {
   display: grid;
@@ -356,7 +435,10 @@
   font-weight: 500;
 }
 
-.ord-detail-money { color: #10b981 !important; font-weight: 700 !important; }
+.ord-detail-money {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+}
 
 .ord-detail-section h3 {
   font-size: 15px;
@@ -377,10 +459,30 @@
 }
 
 @media (max-width: 768px) {
-  .ord-header { padding: 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .ord-table-wrapper { margin: 0 16px; }
-  .ord-filters { padding: 0 16px 16px; }
-  .ord-stats { padding: 0 16px 16px; }
-  .ord-event-selector { padding: 0 16px 16px; }
-  .ord-detail-grid { grid-template-columns: 1fr; }
+  .ord-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ord-table-wrapper {
+    margin: 0 16px;
+  }
+
+  .ord-filters {
+    padding: 0 16px 16px;
+  }
+
+  .ord-stats {
+    padding: 0 16px 16px;
+  }
+
+  .ord-event-selector {
+    padding: 0 16px 16px;
+  }
+
+  .ord-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
