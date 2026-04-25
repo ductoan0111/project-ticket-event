@@ -176,6 +176,28 @@ namespace Repositories.Implementations
             return rowsAffected > 0;
         }
 
+        public async Task<int> SyncTrangThaiTheoThoiGianAsync()
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            const string sql = @"
+UPDATE dbo.SuKien
+SET TrangThai = CASE
+    WHEN TrangThai = 1
+         AND ThoiGianBatDau <= SYSDATETIME()
+         AND ThoiGianKetThuc > SYSDATETIME() THEN 2
+    WHEN TrangThai IN (1, 2)
+         AND ThoiGianKetThuc <= SYSDATETIME() THEN 3
+    ELSE TrangThai
+END
+WHERE (TrangThai = 1
+       AND ThoiGianBatDau <= SYSDATETIME()
+       AND ThoiGianKetThuc > SYSDATETIME())
+   OR (TrangThai IN (1, 2)
+       AND ThoiGianKetThuc <= SYSDATETIME());";
+
+            return await connection.ExecuteAsync(sql);
+        }
+
         public async Task<IEnumerable<SuKien>> GetExpiredEventsAsync()
         {
             using var connection = _connectionFactory.CreateConnection();
@@ -219,7 +241,11 @@ namespace Repositories.Implementations
         {
             const string sql = @"
                 UPDATE dbo.SuKien
-                SET TrangThai = 1
+                SET TrangThai = CASE
+                    WHEN ThoiGianKetThuc <= SYSDATETIME() THEN 3
+                    WHEN ThoiGianBatDau <= SYSDATETIME() AND ThoiGianKetThuc > SYSDATETIME() THEN 2
+                    ELSE 1
+                END
                 WHERE SuKienID = @Id AND TrangThai = 0;";
 
             using var conn = _connectionFactory.CreateConnection();

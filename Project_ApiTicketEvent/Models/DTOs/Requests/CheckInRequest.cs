@@ -9,8 +9,9 @@ namespace Models.DTOs.Requests
     public class CheckInRequest
     {
         public string? QrToken { get; set; }
-        public string? MaVe { get; set; } // optional (nếu muốn check-in bằng mã vé)
+        public string? MaVe { get; set; }
         public int NhanVienID { get; set; }
+        public int SuKienID { get; set; }
         public string? GhiChu { get; set; }
     }
 }

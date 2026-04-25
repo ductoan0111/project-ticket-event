@@ -12,6 +12,7 @@ namespace Services.Interfaces
         Task<int> CreateAsync(SuKien suKien);
         Task<bool> UpdateAsync(SuKien suKien);
         Task<bool> UpdateTrangThaiAsync(int id, byte trangThai);
+        Task<int> SyncTrangThaiTheoThoiGianAsync();
         Task<IEnumerable<SuKien>> GetExpiredEventsAsync();
         List<SuKien> GetPending();
         bool Approve(int suKienId);

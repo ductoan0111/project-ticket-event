@@ -96,6 +96,14 @@ WHERE (@QrToken IS NULL OR v.QrToken = @QrToken)
                     return new { success = false, message = "Bạn không có quyền check-in vé của sự kiện này." };
                 }
 
+                // 2b) Kiểm tra SuKienID từ request khớp với vé
+                if (req.SuKienID > 0 && req.SuKienID != suKienId)
+                {
+                    InsertNhatKyCheckin(conn, tx, veId, suKienId, req.NhanVienID, false, "SuKienID không khớp với vé. " + req.GhiChu);
+                    tx.Commit();
+                    return new { success = false, message = "Vé không thuộc sự kiện được chọn." };
+                }
+
                 // 3) Đơn hàng phải đã thanh toán (TrangThai = 1)
                 if (donHangTrangThai != 1)
                 {

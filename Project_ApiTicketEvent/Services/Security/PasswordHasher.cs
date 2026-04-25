@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Services.Security
 {
     public static class PasswordHasher
-    {
+    {       
         private static readonly PasswordHasher<string> _hasher
             = new();
 

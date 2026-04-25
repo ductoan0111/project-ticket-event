@@ -78,6 +78,7 @@ namespace Services.Implementations
                 RefreshToken = refreshTokenString,
                 ExpiresAt = tokenResult.ExpiresAt,
 
+                NguoiDungId = user.NguoiDungId,
                 HoTen = user.HoTen ?? "",
                 TenDangNhap = user.TenDangNhap ?? "",
                 Email = user.Email ?? "",
@@ -179,6 +180,7 @@ namespace Services.Implementations
                 RefreshToken = newRefreshTokenString,
                 ExpiresAt = tokenResult.ExpiresAt,
 
+                NguoiDungId = user.NguoiDungId,
                 HoTen = user.HoTen ?? "",
                 TenDangNhap = user.TenDangNhap ?? "",
                 Email = user.Email ?? "",

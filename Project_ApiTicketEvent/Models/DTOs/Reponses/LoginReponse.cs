@@ -11,6 +11,7 @@ namespace Models.DTOs.Reponses
         public string AccessToken { get; set; } = null!;
         public string RefreshToken { get; set; } = null!;
         public DateTime ExpiresAt { get; set; }
+        public int NguoiDungId { get; set; }
         public string HoTen { get; set; } = string.Empty;
         public string TenDangNhap { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;

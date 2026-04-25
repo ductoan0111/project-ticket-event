@@ -59,10 +59,12 @@ FROM dbo.DonHang
 WHERE DonHangID = @DonHangID AND NguoiMuaID = @NguoiMuaID;";
 
             const string sqlItems = @"
-SELECT ChiTietID, DonHangID, LoaiVeID, SoLuong, DonGia, (SoLuong * DonGia) AS ThanhTien
-FROM dbo.ChiTietDonHang
-WHERE DonHangID = @DonHangID
-ORDER BY ChiTietID;";
+SELECT ct.ChiTietID, ct.DonHangID, ct.LoaiVeID, ct.SoLuong, ct.DonGia, ct.ThanhTien,
+       lv.TenLoaiVe
+FROM dbo.ChiTietDonHang ct
+JOIN dbo.LoaiVe lv ON lv.LoaiVeID = ct.LoaiVeID
+WHERE ct.DonHangID = @DonHangID
+ORDER BY ct.ChiTietID;";
 
             using var conn = _connectionFactory.CreateConnection();
             if (conn.State != ConnectionState.Open) conn.Open();
@@ -117,6 +119,7 @@ ORDER BY ChiTietID;";
                         ChiTietID = r2.GetInt32(r2.GetOrdinal("ChiTietID")),
                         DonHangID = r2.GetInt32(r2.GetOrdinal("DonHangID")),
                         LoaiVeID = r2.GetInt32(r2.GetOrdinal("LoaiVeID")),
+                        TenLoaiVe = r2.IsDBNull(r2.GetOrdinal("TenLoaiVe")) ? null : r2.GetString(r2.GetOrdinal("TenLoaiVe")),
                         SoLuong = r2.GetInt32(r2.GetOrdinal("SoLuong")),
                         DonGia = r2.GetDecimal(r2.GetOrdinal("DonGia")),
                         ThanhTien = r2.GetDecimal(r2.GetOrdinal("ThanhTien"))
@@ -153,7 +156,8 @@ WHERE DonHangID = @DonHangID;";
 
             //  Lấy SuKienID + DonGia chuẩn từ DB theo LoaiVeID
             const string sqlGetLoaiVeInfo = @"
-SELECT SuKienID, DonGia
+SELECT SuKienID, TenLoaiVe, DonGia, SoLuongToiDa, SoLuongDaBan, GioiHanMoiKhach,
+       ThoiGianMoBan, ThoiGianDongBan, TrangThai
 FROM dbo.LoaiVe
 WHERE LoaiVeID = @LoaiVeID;";
 
@@ -167,9 +171,14 @@ WHERE LoaiVeID = @LoaiVeID;";
             {
                 // 0) VALIDATE + CHUẨN HÓA ITEMS 
                 int suKienIdDb = 0;
+                var now = DateTime.Now;
+                var requestedItems = req.Items
+                    .GroupBy(i => i.LoaiVeID)
+                    .Select(g => new { LoaiVeID = g.Key, SoLuong = g.Sum(x => x.SoLuong) })
+                    .ToList();
                 var normalizedItems = new List<(int LoaiVeID, int SoLuong, decimal DonGia)>();
 
-                foreach (var it in req.Items)
+                foreach (var it in requestedItems)
                 {
                     if (it.LoaiVeID <= 0) throw new ArgumentException("LoaiVeID invalid");
                     if (it.SoLuong <= 0) throw new ArgumentException("SoLuong must be > 0");
@@ -183,7 +192,20 @@ WHERE LoaiVeID = @LoaiVeID;";
                             throw new ArgumentException($"LoaiVeID={it.LoaiVeID} không tồn tại.");
 
                         var lvSuKienId = r.GetInt32(r.GetOrdinal("SuKienID"));
+                        var tenLoaiVe = r.GetString(r.GetOrdinal("TenLoaiVe"));
                         var lvDonGia = r.GetDecimal(r.GetOrdinal("DonGia"));
+                        var soLuongToiDa = r.GetInt32(r.GetOrdinal("SoLuongToiDa"));
+                        var soLuongDaBan = r.GetInt32(r.GetOrdinal("SoLuongDaBan"));
+                        var gioiHanMoiKhach = r.IsDBNull(r.GetOrdinal("GioiHanMoiKhach"))
+                            ? (int?)null
+                            : r.GetInt32(r.GetOrdinal("GioiHanMoiKhach"));
+                        var thoiGianMoBan = r.IsDBNull(r.GetOrdinal("ThoiGianMoBan"))
+                            ? (DateTime?)null
+                            : r.GetDateTime(r.GetOrdinal("ThoiGianMoBan"));
+                        var thoiGianDongBan = r.IsDBNull(r.GetOrdinal("ThoiGianDongBan"))
+                            ? (DateTime?)null
+                            : r.GetDateTime(r.GetOrdinal("ThoiGianDongBan"));
+                        var trangThai = r.GetBoolean(r.GetOrdinal("TrangThai"));
 
                         // đảm bảo tất cả LoaiVe thuộc cùng 1 sự kiện
                         if (suKienIdDb == 0) suKienIdDb = lvSuKienId;
@@ -191,6 +213,22 @@ WHERE LoaiVeID = @LoaiVeID;";
                             throw new ArgumentException(
                                 $"Các LoaiVe không cùng 1 sự kiện. " +
                                 $"Đang có SuKienID={suKienIdDb} nhưng LoaiVeID={it.LoaiVeID} thuộc SuKienID={lvSuKienId}.");
+
+                        if (!trangThai)
+                            throw new ArgumentException($"Loại vé '{tenLoaiVe}' đang ngừng bán.");
+
+                        if (thoiGianMoBan.HasValue && thoiGianMoBan.Value > now)
+                            throw new ArgumentException($"Loại vé '{tenLoaiVe}' chưa mở bán.");
+
+                        if (thoiGianDongBan.HasValue && thoiGianDongBan.Value < now)
+                            throw new ArgumentException($"Loại vé '{tenLoaiVe}' đã đóng bán.");
+
+                        var soLuongCon = soLuongToiDa - soLuongDaBan;
+                        if (it.SoLuong > soLuongCon)
+                            throw new ArgumentException($"Loại vé '{tenLoaiVe}' chỉ còn {soLuongCon} vé.");
+
+                        if (gioiHanMoiKhach.HasValue && it.SoLuong > gioiHanMoiKhach.Value)
+                            throw new ArgumentException($"Loại vé '{tenLoaiVe}' giới hạn tối đa {gioiHanMoiKhach.Value} vé mỗi đơn.");
 
                         normalizedItems.Add((it.LoaiVeID, it.SoLuong, lvDonGia));
                     }
@@ -311,9 +349,11 @@ ORDER BY NgayDat DESC;";
         public async Task<DonHangDetail?> GetDetailBySuKienAsync(int donHangId, int suKienId)
         {
             const string sqlDonHang = @"
-SELECT DonHangID, NguoiMuaID, SuKienID, NgayDat, TongTien, TrangThai
-FROM dbo.DonHang
-WHERE DonHangID = @DonHangID AND SuKienID = @SuKienID;";
+SELECT dh.DonHangID, dh.NguoiMuaID, dh.SuKienID, dh.NgayDat, dh.TongTien, dh.TrangThai,
+       nd.HoTen, nd.Email
+FROM dbo.DonHang dh
+LEFT JOIN dbo.NguoiDung nd ON nd.NguoiDungID = dh.NguoiMuaID
+WHERE dh.DonHangID = @DonHangID AND dh.SuKienID = @SuKienID;";
 
             const string sqlItems = @"
 SELECT 
@@ -355,7 +395,9 @@ ORDER BY ct.ChiTietID;";
                     SuKienID = baseDh.SuKienID,
                     NgayDat = baseDh.NgayDat,
                     TongTien = baseDh.TongTien,
-                    TrangThai = baseDh.TrangThai
+                    TrangThai = baseDh.TrangThai,
+                    HoTen = r.IsDBNull(r.GetOrdinal("HoTen")) ? null : r.GetString(r.GetOrdinal("HoTen")),
+                    Email = r.IsDBNull(r.GetOrdinal("Email")) ? null : r.GetString(r.GetOrdinal("Email"))
                 };
             }
 
@@ -377,6 +419,7 @@ ORDER BY ct.ChiTietID;";
                         ChiTietID = r2.GetInt32(r2.GetOrdinal("ChiTietID")),
                         DonHangID = r2.GetInt32(r2.GetOrdinal("DonHangID")),
                         LoaiVeID = r2.GetInt32(r2.GetOrdinal("LoaiVeID")),
+                        TenLoaiVe = r2.IsDBNull(r2.GetOrdinal("TenLoaiVe")) ? null : r2.GetString(r2.GetOrdinal("TenLoaiVe")),
                         SoLuong = r2.GetInt32(r2.GetOrdinal("SoLuong")),
                         DonGia = r2.GetDecimal(r2.GetOrdinal("DonGia")),
                         ThanhTien = r2.GetDecimal(r2.GetOrdinal("ThanhTien"))

@@ -109,6 +109,54 @@ WHERE ct.DonHangID = @DonHangID
                         throw new InvalidOperationException("Đơn hàng này đã được sinh vé trước đó.");
                 }
 
+                const string sqlGetOrderItems = @"
+SELECT LoaiVeID, SoLuong
+FROM dbo.ChiTietDonHang
+WHERE DonHangID = @DonHangID;";
+
+                var orderItems = new List<(int loaiVeId, int soLuong)>();
+
+                using (var cmdItems = new SqlCommand(sqlGetOrderItems, conn, tran))
+                {
+                    cmdItems.Parameters.AddWithValue("@DonHangID", donHangId);
+
+                    using var rItems = await cmdItems.ExecuteReaderAsync();
+                    while (await rItems.ReadAsync())
+                    {
+                        var loaiVeId = rItems.GetInt32(rItems.GetOrdinal("LoaiVeID"));
+                        var soLuong = rItems.GetInt32(rItems.GetOrdinal("SoLuong"));
+                        orderItems.Add((loaiVeId, soLuong));
+                    }
+                }
+
+                if (orderItems.Count == 0)
+                    throw new InvalidOperationException("Đơn hàng không có chi tiết, không thể sinh vé.");
+
+                const string sqlReserveStock = @"
+UPDATE dbo.LoaiVe
+SET SoLuongDaBan = SoLuongDaBan + @SoLuong
+WHERE LoaiVeID = @LoaiVeID
+  AND SuKienID = @SuKienID
+  AND TrangThai = 1
+  AND (ThoiGianMoBan IS NULL OR ThoiGianMoBan <= SYSDATETIME())
+  AND (ThoiGianDongBan IS NULL OR ThoiGianDongBan >= SYSDATETIME())
+  AND SoLuongDaBan + @SoLuong <= SoLuongToiDa;";
+
+                foreach (var (loaiVeId, soLuong) in orderItems)
+                {
+                    if (soLuong <= 0)
+                        throw new InvalidOperationException($"Số lượng vé không hợp lệ cho LoaiVeID={loaiVeId}.");
+
+                    using var cmdStock = new SqlCommand(sqlReserveStock, conn, tran);
+                    cmdStock.Parameters.AddWithValue("@LoaiVeID", loaiVeId);
+                    cmdStock.Parameters.AddWithValue("@SuKienID", suKienIdDon);
+                    cmdStock.Parameters.AddWithValue("@SoLuong", soLuong);
+
+                    var affected = await cmdStock.ExecuteNonQueryAsync();
+                    if (affected == 0)
+                        throw new InvalidOperationException($"Loại vé {loaiVeId} đã hết, ngừng bán hoặc không đủ số lượng.");
+                }
+
                 // 2) insert ThanhToan
                 var thanhToan = new ThanhToan
                 {

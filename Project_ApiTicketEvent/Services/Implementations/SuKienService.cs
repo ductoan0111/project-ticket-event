@@ -14,17 +14,29 @@ namespace Services.Implementations
             _repo = repo;
         }
 
-        public Task<IEnumerable<SuKien>> GetAllAsync()
-            => _repo.GetAllAsync();
+        public async Task<IEnumerable<SuKien>> GetAllAsync()
+        {
+            await _repo.SyncTrangThaiTheoThoiGianAsync();
+            return await _repo.GetAllAsync();
+        }
 
-        public Task<List<SuKienRequest>> GetByNameAsync(string tenSuKien)
-            => _repo.GetByNameAsync(tenSuKien, trangThai: true);
+        public async Task<List<SuKienRequest>> GetByNameAsync(string tenSuKien)
+        {
+            await _repo.SyncTrangThaiTheoThoiGianAsync();
+            return await _repo.GetByNameAsync(tenSuKien, trangThai: true);
+        }
 
-        public Task<List<SuKienRequest>> GetByDanhMucNameAsync(string tenDanhMuc)
-            => _repo.GetByDanhMucNameAsync(tenDanhMuc, trangThai: true);
+        public async Task<List<SuKienRequest>> GetByDanhMucNameAsync(string tenDanhMuc)
+        {
+            await _repo.SyncTrangThaiTheoThoiGianAsync();
+            return await _repo.GetByDanhMucNameAsync(tenDanhMuc, trangThai: true);
+        }
 
-        public Task<SuKien?> GetByIdAsync(int id)
-            => _repo.GetByIdAsync(id);
+        public async Task<SuKien?> GetByIdAsync(int id)
+        {
+            await _repo.SyncTrangThaiTheoThoiGianAsync();
+            return await _repo.GetByIdAsync(id);
+        }
 
         public Task<int> CreateAsync(SuKien suKien)
             => _repo.CreateAsync(suKien);
@@ -35,8 +47,14 @@ namespace Services.Implementations
         public Task<bool> UpdateTrangThaiAsync(int id, byte trangThai)
             => _repo.UpdateTrangThaiAsync(id, trangThai);
 
-        public Task<IEnumerable<SuKien>> GetExpiredEventsAsync()
-            => _repo.GetExpiredEventsAsync();
+        public Task<int> SyncTrangThaiTheoThoiGianAsync()
+            => _repo.SyncTrangThaiTheoThoiGianAsync();
+
+        public async Task<IEnumerable<SuKien>> GetExpiredEventsAsync()
+        {
+            await _repo.SyncTrangThaiTheoThoiGianAsync();
+            return await _repo.GetExpiredEventsAsync();
+        }
 
         public List<SuKien> GetPending()
             => _repo.GetPending();

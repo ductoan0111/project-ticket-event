@@ -27,6 +27,9 @@ namespace TicketEvent.Organizer.Controllers
             if (request.NhanVienID <= 0)
                 return BadRequest(new { success = false, message = "NhanVienID không hợp lệ." });
 
+            if (request.SuKienID <= 0)
+                return BadRequest(new { success = false, message = "SuKienID không hợp lệ." });
+
             var result = _service.Checkin(request);
 
             // result là dynamic object từ repository

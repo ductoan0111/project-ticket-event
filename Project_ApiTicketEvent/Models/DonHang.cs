@@ -20,6 +20,7 @@ namespace Models
         public int ChiTietID { get; set; }
         public int DonHangID { get; set; }
         public int LoaiVeID { get; set; }
+        public string? TenLoaiVe { get; set; }
         public int SoLuong { get; set; }
         public decimal DonGia { get; set; }
         public decimal ThanhTien { get; set; }
@@ -27,6 +28,8 @@ namespace Models
 
     public class DonHangDetail : DonHang
     {
+        public string? HoTen { get; set; }
+        public string? Email { get; set; }
         public List<DonHangChiTiet> Items { get; set; } = new();
     }
 }
