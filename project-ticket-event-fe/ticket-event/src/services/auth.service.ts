@@ -52,6 +52,7 @@ class AuthService {
   logout(): void {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   }
 
   isAuthenticated(): boolean {

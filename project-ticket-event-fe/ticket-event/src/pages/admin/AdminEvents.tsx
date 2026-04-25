@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Check, X, Clock } from 'lucide-react';
-import { adminService } from '../services/admin.service';
-import type { OrgEvent } from '../services/organizer.service';
+import { adminService } from '../../services/admin.service';
+import type { OrgEvent } from '../../services/organizer.service';
 import './AdminEvents.css';
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {

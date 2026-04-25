@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, CreditCard, Check, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { orderService } from '../services/order.service';
-import { paymentService } from '../services/payment.service';
-import { ticketTypeService } from '../services/ticketType.service';
-import type { TicketType } from '../services/ticketType.service';
+import { useAuth } from '../../context/AuthContext';
+import { orderService } from '../../services/order.service';
+import { paymentService } from '../../services/payment.service';
+import { ticketTypeService } from '../../services/ticketType.service';
+import type { TicketType } from '../../services/ticketType.service';
 import './Checkout.css';
 
 interface TicketSelection {
   loaiVeId: number;
   quantity: number;
 }
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  const responseMessage = (error as { response?: { data?: { message?: string } } }).response?.data?.message;
+  return responseMessage || fallback;
+};
 
 export default function Checkout() {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +45,7 @@ export default function Checkout() {
     
     try {
       setLoading(true);
-      const response = await ticketTypeService.getByEventId(parseInt(id));
+      const response = await ticketTypeService.getByEventId(parseInt(id), true);
       const types = response.data.filter(t => 
         ticketData.some(td => td.loaiVeId === t.loaiVeID)
       );
@@ -59,6 +64,35 @@ export default function Checkout() {
     }, 0);
   };
 
+  const normalizeTickets = () => {
+    const grouped = new Map<number, number>();
+    tickets.forEach((ticket) => {
+      grouped.set(ticket.loaiVeId, (grouped.get(ticket.loaiVeId) || 0) + Number(ticket.quantity || 0));
+    });
+
+    return Array.from(grouped.entries()).map(([loaiVeId, quantity]) => ({
+      loaiVeId,
+      quantity,
+    }));
+  };
+
+  const validateTickets = (selected: TicketSelection[]) => {
+    if (selected.length === 0) return 'Vui lòng chọn ít nhất 1 vé.';
+
+    for (const ticket of selected) {
+      const type = ticketTypes.find(t => t.loaiVeID === ticket.loaiVeId);
+      if (!type) return 'Một số loại vé không còn mở bán. Vui lòng chọn lại.';
+      if (ticket.quantity <= 0) return 'Số lượng vé không hợp lệ.';
+      if (!type.dangMoBan || !type.conVe) return `Loại vé "${type.tenLoaiVe}" hiện không thể đặt.`;
+      if (ticket.quantity > type.soLuongCon) return `Loại vé "${type.tenLoaiVe}" chỉ còn ${type.soLuongCon} vé.`;
+      if (type.gioiHanMoiKhach && ticket.quantity > type.gioiHanMoiKhach) {
+        return `Loại vé "${type.tenLoaiVe}" giới hạn tối đa ${type.gioiHanMoiKhach} vé mỗi đơn.`;
+      }
+    }
+
+    return null;
+  };
+
   const handleCheckout = async () => {
     if (!user?.nguoiDungId || !id) {
       alert('Vui lòng đăng nhập để tiếp tục');
@@ -68,12 +102,22 @@ export default function Checkout() {
 
     try {
       setProcessing(true);
+      const normalizedTickets = normalizeTickets();
+      const validationError = validateTickets(normalizedTickets);
+
+      if (validationError) {
+        alert(validationError);
+        await loadTicketTypes(normalizedTickets);
+        return;
+      }
+
+      setTickets(normalizedTickets);
 
       // 1. Tạo đơn hàng
       const orderData = {
         nguoiMuaID: user.nguoiDungId,
         suKienID: parseInt(id),
-        items: tickets.map(t => ({
+        items: normalizedTickets.map(t => ({
           loaiVeID: t.loaiVeId,
           soLuong: t.quantity,
         })),
@@ -84,7 +128,7 @@ export default function Checkout() {
       // 2. Thanh toán mock
       await paymentService.mockPayment(donHangId, user.nguoiDungId, {
         phuongThuc: paymentMethod,
-        ghiChu: 'Thanh toán qua web',
+        rawResponse: 'Thanh toán qua web',
       });
 
       // 3. Chuyển đến trang thành công
@@ -93,7 +137,7 @@ export default function Checkout() {
       });
     } catch (error) {
       console.error('Checkout failed:', error);
-      alert('Đặt vé thất bại. Vui lòng thử lại.');
+      alert(getApiErrorMessage(error, 'Đặt vé thất bại. Vui lòng thử lại.'));
     } finally {
       setProcessing(false);
     }

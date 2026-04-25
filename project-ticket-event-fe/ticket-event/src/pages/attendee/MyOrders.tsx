@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Package, Calendar, DollarSign, X, Eye } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { orderService } from '../services/order.service';
-import type { Order } from '../services/order.service';
+import { useAuth } from '../../context/AuthContext';
+import { orderService } from '../../services/order.service';
+import type { Order } from '../../services/order.service';
 import './MyOrders.css';
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {

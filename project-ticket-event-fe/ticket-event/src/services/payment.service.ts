@@ -13,6 +13,7 @@ export interface Payment {
 export interface PaymentRequest {
   phuongThuc: string;
   ghiChu?: string;
+  rawResponse?: string;
 }
 
 export const paymentService = {

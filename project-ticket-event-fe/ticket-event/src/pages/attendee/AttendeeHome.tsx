@@ -1,25 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Calendar, MapPin, Search, TrendingUp, Clock, Ticket, User, LogOut, Bell,
   Star, Heart, ChevronDown, Music, PartyPopper, Users, ArrowRight, Sparkles, Tag,
-  Filter, ChevronRight, Zap
+  Filter, ChevronRight, Zap, Radio
 } from 'lucide-react';
-import eventService from '../services/event.service';
-import favoriteService from '../services/favorite.service';
-import notificationService from '../services/notification.service';
-import locationService from '../services/location.service';
-import categoryService, { getCategoryIcon } from '../services/category.service';
-import type { Event } from '../services/event.service';
-import type { Location } from '../services/location.service';
-import type { Category } from '../services/category.service';
+import eventService from '../../services/event.service';
+import favoriteService from '../../services/favorite.service';
+import notificationService from '../../services/notification.service';
+import locationService from '../../services/location.service';
+import categoryService, { getCategoryIcon } from '../../services/category.service';
+import type { Event } from '../../services/event.service';
+import type { Location } from '../../services/location.service';
+import type { Category } from '../../services/category.service';
 import './AttendeeHome.css';
 
 const AttendeeHome = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [ongoingEvents, setOngoingEvents] = useState<Event[]>([]);
   const [popularEvents, setPopularEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]); // Lưu tất cả events
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]); // Events sau khi lọc
@@ -60,8 +61,9 @@ const AttendeeHome = () => {
     try {
       setLoading(true);
 
-      const [upcoming, popular, cats, favIds, unread, locations] = await Promise.all([
+      const [upcoming, ongoing, popular, cats, favIds, unread, locations] = await Promise.all([
         eventService.getUpcomingEvents(9).catch(() => []),
+        eventService.getOngoingEvents(9).catch(() => []),
         eventService.getPopularEvents(9).catch(() => []),
         categoryService.getCategories().catch(() => []),
         user ? favoriteService.getFavoriteIds().catch(() => []) : Promise.resolve([]),
@@ -74,6 +76,10 @@ const AttendeeHome = () => {
       if (Array.isArray(locations)) {
         locations.forEach(loc => locationMap.set(loc.diaDiemID, loc));
       }
+      const categoryMap = new Map<number, Category>();
+      if (Array.isArray(cats)) {
+        cats.forEach(cat => categoryMap.set(cat.danhMucID, cat));
+      }
 
       const enrichEvents = (events: Event[]) => {
         if (!Array.isArray(events)) return [];
@@ -83,18 +89,21 @@ const AttendeeHome = () => {
           // Fallback về locationMap lookup, sau đó về text mặc định
           tenDiaDiem: event.tenDiaDiem ||
             locationMap.get(event.diaDiemID)?.tenDiaDiem ||
-            (event.diaDiemID > 0 ? `Địa điểm #${event.diaDiemID}` : 'Chưa xác định')
+            (event.diaDiemID > 0 ? `Địa điểm #${event.diaDiemID}` : 'Chưa xác định'),
+          tenDanhMuc: event.tenDanhMuc || categoryMap.get(event.danhMucID)?.tenDanhMuc,
         }));
       };
 
       const enrichedUpcoming = enrichEvents(upcoming);
+      const enrichedOngoing = enrichEvents(ongoing);
       const enrichedPopular = enrichEvents(popular);
 
       setUpcomingEvents(enrichedUpcoming);
+      setOngoingEvents(enrichedOngoing);
       setPopularEvents(enrichedPopular);
       
       // Lưu tất cả events để tìm kiếm
-      const combined = [...enrichedUpcoming, ...enrichedPopular];
+      const combined = [...enrichedUpcoming, ...enrichedOngoing, ...enrichedPopular];
       // Loại bỏ duplicate dựa trên suKienID
       const uniqueEvents = Array.from(
         new Map(combined.map(e => [e.suKienID, e])).values()
@@ -106,7 +115,7 @@ const AttendeeHome = () => {
       setUnreadCount(unread || 0);
 
       // Load favorite counts
-      const allEvents = [...enrichedUpcoming, ...enrichedPopular];
+      const allEvents = [...enrichedUpcoming, ...enrichedOngoing, ...enrichedPopular];
       const uniqueEventIds = [...new Set(allEvents.map(e => e.suKienID))];
       if (uniqueEventIds.length > 0) {
         const counts = new Map<number, number>();
@@ -246,10 +255,15 @@ const AttendeeHome = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const renderEventCard = (event: Event, index: number, badge: 'upcoming' | 'hot') => {
+  const renderEventCard = (event: Event, index: number, badge: 'upcoming' | 'ongoing' | 'hot') => {
     const isFav = favoriteIds.has(event.suKienID);
     const favCount = favoriteCounts.get(event.suKienID) || 0;
     const catInfo = getCategoryIcon(event.tenDanhMuc || '');
+    const badgeContent = {
+      upcoming: { icon: <Clock size={12} />, label: 'Sắp diễn ra' },
+      ongoing: { icon: <Radio size={12} />, label: 'Đang diễn ra' },
+      hot: { icon: <Zap size={12} />, label: 'Nổi bật' },
+    }[badge];
 
     return (
       <div
@@ -272,8 +286,8 @@ const AttendeeHome = () => {
           <div className="event-img-overlay" />
 
           <div className={`event-badge-chip ${badge}`}>
-            {badge === 'upcoming' ? <Clock size={12} /> : <Zap size={12} />}
-            <span>{badge === 'upcoming' ? 'Sắp diễn ra' : 'Nổi bật'}</span>
+            {badgeContent.icon}
+            <span>{badgeContent.label}</span>
           </div>
 
           <button
@@ -668,7 +682,48 @@ const AttendeeHome = () => {
         </section>
         )}
 
+        {/* ONGOING EVENTS - Ẩn khi đang tìm kiếm hoặc lọc */}
         {/* POPULAR EVENTS - Ẩn khi đang tìm kiếm hoặc lọc */}
+        {!isSearching && !isFilteringByCategory && (
+        <section className="ah-section">
+          <div className="ah-section-head">
+            <div>
+              <h2 className="ah-section-title"><Radio size={24} />Sự kiện đang diễn ra</h2>
+              <p className="ah-section-sub">Tham gia ngay các sự kiện đang mở cửa</p>
+            </div>
+            <button className="ah-view-all" onClick={() => navigate('/events?filter=ongoing')}>
+              Xem tất cả <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="ah-skeleton-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="ah-skeleton-card">
+                  <div className="ah-skel-img" />
+                  <div className="ah-skel-body">
+                    <div className="ah-skel-line w60" />
+                    <div className="ah-skel-line w90" />
+                    <div className="ah-skel-line w75" />
+                    <div className="ah-skel-line w50" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : ongoingEvents.length === 0 ? (
+            <div className="ah-empty">
+              <Radio size={56} />
+              <h3>Chưa có sự kiện đang diễn ra</h3>
+              <p>Các sự kiện sẽ xuất hiện ở đây khi đến giờ bắt đầu.</p>
+            </div>
+          ) : (
+            <div className="ah-events-grid">
+              {ongoingEvents.map((ev, i) => renderEventCard(ev, i, 'ongoing'))}
+            </div>
+          )}
+        </section>
+        )}
+
         {!isSearching && !isFilteringByCategory && (
         <section className="ah-section">
           <div className="ah-section-head">

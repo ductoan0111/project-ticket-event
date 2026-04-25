@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, TongQuanBaoCao, DoanhThuTheoNgay, LoaiVeBanChay } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, TongQuanBaoCao, DoanhThuTheoNgay, LoaiVeBanChay } from '../../services/organizer.service';
 import './OrganizerReports.css';
 
 export default function OrganizerReports() {

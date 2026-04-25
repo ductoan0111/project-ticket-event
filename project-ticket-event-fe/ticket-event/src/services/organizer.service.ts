@@ -132,15 +132,26 @@ export interface OrgDonHang {
   phuongThucThanhToan?: string;
 }
 
+export interface OrgDonHangChiTiet {
+  chiTietID: number;
+  donHangID: number;
+  loaiVeID: number;
+  tenLoaiVe: string;
+  soLuong: number;
+  donGia: number;
+  thanhTien: number;
+}
+
 export interface OrgDonHangDetail {
   donHangID: number;
-  nguoiDungID: number;
-  tenNguoiDung?: string;
-  email?: string;
+  nguoiMuaID: number;
+  suKienID: number;
   ngayDat: string;
   tongTien: number;
   trangThai: number;
-  chiTiet?: unknown[];
+  hoTen?: string;
+  email?: string;
+  items?: OrgDonHangChiTiet[];
 }
 
 export interface ThongKeDonHang {
@@ -157,6 +168,7 @@ export interface CheckInRequest {
   qrToken?: string;
   maVe?: string;
   nhanVienID: number;
+  suKienID: number;
 }
 
 // ============================================

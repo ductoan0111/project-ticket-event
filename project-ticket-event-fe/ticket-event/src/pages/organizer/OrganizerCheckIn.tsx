@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, CheckInRequest } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, CheckInRequest } from '../../services/organizer.service';
 import './OrganizerCheckIn.css';
 
 export default function OrganizerCheckIn() {
@@ -16,20 +16,34 @@ export default function OrganizerCheckIn() {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [history, setHistory] = useState<{ time: string; input: string; success: boolean; message: string }[]>([]);
 
+  const ongoingEvents = events.filter(ev => ev.trangThai === 2);
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    // Auto-select first ongoing event when events load
+    if (ongoingEvents.length > 0 && !ongoingEvents.find(e => e.suKienID === selectedEventId)) {
+      setSelectedEventId(ongoingEvents[0].suKienID);
+    } else if (ongoingEvents.length === 0 && events.length > 0) {
+      setSelectedEventId(0);
+    }
+  }, [events, ongoingEvents]);
 
   const loadEvents = async () => {
     try {
       const data = await organizerService.getMyEvents();
       setEvents(data);
-      if (data.length > 0) setSelectedEventId(data[0].suKienID);
     } catch { /* silent */ }
   };
 
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedEventId) {
+      setResult({ success: false, message: 'Vui lòng chọn sự kiện đang diễn ra.' });
+      return;
+    }
     if (!nhanVienID || nhanVienID <= 0) {
       setResult({ success: false, message: 'Vui lòng nhập ID nhân viên hợp lệ.' });
       return;
@@ -44,6 +58,7 @@ export default function OrganizerCheckIn() {
       setResult(null);
       const req: CheckInRequest = {
         nhanVienID,
+        suKienID: selectedEventId,
         ...(checkInMode === 'qr' ? { qrToken: inputVal } : { maVe: inputVal }),
       };
       const res = await organizerService.checkIn(req);
@@ -88,10 +103,13 @@ export default function OrganizerCheckIn() {
               className="ci-select"
             >
               <option value={0}>-- Chọn sự kiện --</option>
-              {events.map(ev => (
+              {ongoingEvents.map(ev => (
                 <option key={ev.suKienID} value={ev.suKienID}>{ev.tenSuKien}</option>
               ))}
             </select>
+            {ongoingEvents.length === 0 && events.length > 0 && (
+              <small className="ci-no-ongoing">Không có sự kiện nào đang diễn ra</small>
+            )}
           </div>
 
           <div className="ci-mode-tabs">

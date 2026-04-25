@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Tag, Plus, Edit2, Trash2, X } from 'lucide-react';
-import { adminService } from '../services/admin.service';
-import type { Category } from '../services/admin.service';
+import { adminService } from '../../services/admin.service';
+import type { Category } from '../../services/admin.service';
 import './AdminCategories.css';
 
 export default function AdminCategories() {

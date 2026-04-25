@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Edit2, Trash2, X } from 'lucide-react';
-import { adminService } from '../services/admin.service';
-import type { Location } from '../services/admin.service';
+import { adminService } from '../../services/admin.service';
+import type { Location } from '../../services/admin.service';
 import './AdminLocations.css';
 
 export default function AdminLocations() {

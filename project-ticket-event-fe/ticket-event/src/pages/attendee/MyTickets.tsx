@@ -4,10 +4,10 @@ import {
   X, Download, Search, ChevronDown
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ticketService } from '../services/ticket.service';
-import type { Ticket } from '../services/ticket.service';
+import { ticketService } from '../../services/ticket.service';
+import type { Ticket } from '../../services/ticket.service';
 import './MyTickets.css';
 
 const STATUS_MAP: Record<number, { label: string; color: string; bg: string }> = {

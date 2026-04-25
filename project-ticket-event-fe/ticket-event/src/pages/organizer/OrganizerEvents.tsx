@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, CreateEventRequest } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, CreateEventRequest } from '../../services/organizer.service';
 import './OrganizerEvents.css';
 
 

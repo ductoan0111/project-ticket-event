@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, DollarSign, Clock } from 'lucide-react';
-import { adminService } from '../services/admin.service';
-import type { AdminStats } from '../services/admin.service';
+import { adminService } from '../../services/admin.service';
+import type { AdminStats } from '../../services/admin.service';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {

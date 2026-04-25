@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, OrgThongBao, GuiThongBaoRequest } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, OrgThongBao, GuiThongBaoRequest } from '../../services/organizer.service';
 import './OrganizerNotifications.css';
 
 const LOAI_MAP: Record<string, { label: string; icon: string; color: string }> = {

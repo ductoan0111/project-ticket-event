@@ -14,6 +14,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_STORAGE_KEY = 'user';
+
+const parseJwtUser = (token: string): User | null => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const nguoiDungId = Number(payload.sub);
+    if (!nguoiDungId) return null;
+
+    return {
+      nguoiDungId,
+      hoTen: payload.fullName || payload.unique_name || payload.email || '',
+      tenDangNhap: payload.unique_name || '',
+      email: payload.email || '',
+      vaiTro: payload.role || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
+    };
+  } catch {
+    return null;
+  }
+};
+
+const buildUserFromLoginResponse = (response: LoginResponse): User => ({
+  nguoiDungId: response.nguoiDungId,
+  hoTen: response.hoTen,
+  tenDangNhap: response.tenDangNhap,
+  email: response.email,
+  soDienThoai: response.soDienThoai,
+  vaiTro: response.vaiTro,
+  vaiTroId: response.vaiTroId,
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,24 +52,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Kiểm tra token khi app load
     const token = authService.getAccessToken();
     if (token) {
-      // TODO: Có thể gọi API để lấy thông tin user
-      setLoading(false);
-    } else {
-      setLoading(false);
+      const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        const tokenUser = parseJwtUser(token);
+        if (tokenUser) {
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(tokenUser));
+          setUser(tokenUser);
+        }
+      }
     }
+    setLoading(false);
   }, []);
 
   const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await authService.login(credentials);
-    setUser({
-      nguoiDungId: response.nguoiDungId,
-      hoTen: response.hoTen,
-      tenDangNhap: response.tenDangNhap,
-      email: response.email,
-      soDienThoai: response.soDienThoai,
-      vaiTro: response.vaiTro,
-      vaiTroId: response.vaiTroId,
-    });
+    const loggedInUser = buildUserFromLoginResponse(response);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
+    setUser(loggedInUser);
     return response; // Return response for redirect logic
   };
 

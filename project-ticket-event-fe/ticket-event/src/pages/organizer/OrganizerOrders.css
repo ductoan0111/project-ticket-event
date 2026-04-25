@@ -447,15 +447,30 @@
   margin: 0 0 10px;
 }
 
-.ord-detail-json {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px;
-  font-size: 12px;
-  overflow-x: auto;
-  color: #475569;
-  white-space: pre-wrap;
+.ord-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.ord-detail-table th {
+  background: #f1f5f9;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ord-detail-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+}
+
+.ord-detail-table tr:last-child td {
+  border-bottom: none;
 }
 
 @media (max-width: 768px) {

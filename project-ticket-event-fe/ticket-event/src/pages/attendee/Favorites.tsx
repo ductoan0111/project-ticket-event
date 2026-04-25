@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Calendar, MapPin, Trash2 } from 'lucide-react';
-import favoriteService from '../services/favorite.service';
-import categoryService, { getCategoryIcon } from '../services/category.service';
-import locationService from '../services/location.service';
-import type { FavoriteEvent } from '../services/favorite.service';
-import type { Category } from '../services/category.service';
-import type { Location } from '../services/location.service';
+import favoriteService from '../../services/favorite.service';
+import categoryService, { getCategoryIcon } from '../../services/category.service';
+import locationService from '../../services/location.service';
+import type { FavoriteEvent } from '../../services/favorite.service';
+import type { Category } from '../../services/category.service';
+import type { Location } from '../../services/location.service';
 import './Favorites.css';
 
 export default function Favorites() {

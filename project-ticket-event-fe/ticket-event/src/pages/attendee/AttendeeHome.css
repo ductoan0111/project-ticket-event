@@ -683,6 +683,10 @@
   background: rgba(99, 102, 241, 0.9);
   color: white;
 }
+.event-badge-chip.ongoing {
+  background: rgba(16, 185, 129, 0.92);
+  color: white;
+}
 .event-badge-chip.hot {
   background: rgba(239, 68, 68, 0.9);
   color: white;

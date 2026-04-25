@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Shield, LayoutDashboard, Calendar, Users, LogOut, ChevronDown, Tag, MapPin } from 'lucide-react';
 import './AdminLayout.css';
 

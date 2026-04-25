@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, OrgDonHang, OrgDonHangDetail, ThongKeDonHang } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, OrgDonHang, OrgDonHangDetail, ThongKeDonHang } from '../../services/organizer.service';
 import './OrganizerOrders.css';
 
 const TRANG_THAI_MAP: Record<number, { label: string; color: string; bg: string }> = {
@@ -259,7 +259,7 @@ export default function OrganizerOrders() {
                   </div>
                   <div className="ord-detail-item">
                     <label>Khách hàng</label>
-                    <span>{selectedOrder.tenNguoiDung ?? 'Không rõ'}</span>
+                    <span>{selectedOrder.hoTen ?? 'Không rõ'}</span>
                   </div>
                   <div className="ord-detail-item">
                     <label>Email</label>
@@ -286,12 +286,29 @@ export default function OrganizerOrders() {
                     </span>
                   </div>
                 </div>
-                {selectedOrder.chiTiet && (selectedOrder.chiTiet as unknown[]).length > 0 && (
+                {selectedOrder.items && selectedOrder.items.length > 0 && (
                   <div className="ord-detail-section">
                     <h3>Chi tiết vé</h3>
-                    <pre className="ord-detail-json">
-                      {JSON.stringify(selectedOrder.chiTiet, null, 2)}
-                    </pre>
+                    <table className="ord-detail-table">
+                      <thead>
+                        <tr>
+                          <th>Loại vé</th>
+                          <th>Đơn giá</th>
+                          <th>Số lượng</th>
+                          <th>Thành tiền</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedOrder.items.map((item, idx) => (
+                          <tr key={idx}>
+                            <td>{item.tenLoaiVe}</td>
+                            <td>{formatCurrency(item.donGia)}</td>
+                            <td>{item.soLuong}</td>
+                            <td>{formatCurrency(item.thanhTien)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

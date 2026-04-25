@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, Calendar, Shield, Edit2, Save, X, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import userService from '../services/user.service';
-import type { UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '../services/user.service';
+import userService from '../../services/user.service';
+import type { UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '../../services/user.service';
 import './Profile.css';
 
 export default function Profile() {

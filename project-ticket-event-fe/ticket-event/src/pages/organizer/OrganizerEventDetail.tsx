@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { organizerService } from '../services/organizer.service';
-import type { OrgEvent, OrgLoaiVe, CreateLoaiVeRequest, UpdateLoaiVeRequest } from '../services/organizer.service';
+import { organizerService } from '../../services/organizer.service';
+import type { OrgEvent, OrgLoaiVe, CreateLoaiVeRequest, UpdateLoaiVeRequest } from '../../services/organizer.service';
 import './OrganizerEventDetail.css';
 
 const STATUS_MAP: Record<number, { label: string; color: string; bg: string }> = {

@@ -5,12 +5,12 @@ import {
   ArrowLeft, Users, AlertCircle, CheckCircle,
   X, ShoppingCart, Tag, Info, ExternalLink
 } from 'lucide-react';
-import eventService from '../services/event.service';
-import favoriteService from '../services/favorite.service';
-import { ticketTypeService } from '../services/ticketType.service';
-import { useAuth } from '../context/AuthContext';
-import type { EventDetail } from '../services/event.service';
-import type { TicketType } from '../services/ticketType.service';
+import eventService from '../../services/event.service';
+import favoriteService from '../../services/favorite.service';
+import { ticketTypeService } from '../../services/ticketType.service';
+import { useAuth } from '../../context/AuthContext';
+import type { EventDetail } from '../../services/event.service';
+import type { TicketType } from '../../services/ticketType.service';
 import './EventDetail.css';
 
 const EventDetailPage = () => {

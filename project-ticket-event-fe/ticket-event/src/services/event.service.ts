@@ -124,6 +124,23 @@ const eventService = {
     }
   },
 
+  // Lấy sự kiện đang diễn ra
+  getOngoingEvents: async (limit: number = 9): Promise<Event[]> => {
+    try {
+      const response = await attendeeApi.get<EventsResponse>(
+        `/SuKien/filter?trangThai=2&pageSize=${limit}&sortBy=ThoiGianKetThuc&sortOrder=asc`
+      );
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      console.warn('Unexpected response structure for ongoing events:', response.data);
+      return [];
+    } catch (error) {
+      console.error('Error fetching ongoing events:', error);
+      return [];
+    }
+  },
+
   // Tìm kiếm sự kiện
   searchEvents: async (query: string, limit: number = 20): Promise<Event[]> => {
     const response = await attendeeApi.get<EventsResponse>(
