@@ -35,5 +35,8 @@ namespace Services.Implementations
 
         public Task<Dictionary<string, object>> GetThongKeAsync(int suKienId)
             => _repo.GetThongKeAsync(suKienId);
+
+        public Task<decimal> GetTongDoanhThuAsync()
+            => _repo.GetTongDoanhThuAsync();
     }
 }

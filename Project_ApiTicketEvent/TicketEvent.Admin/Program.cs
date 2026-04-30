@@ -31,11 +31,15 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IDanhMucSuKienRepository, DanhMucSuKienRepository>();
 builder.Services.AddScoped<IDiaDiemReponsitory, DiaDiemReponsitory>();
 builder.Services.AddScoped<ISuKienRepository, SuKienRepository>();
+builder.Services.AddScoped<INguoiDungRepository, NguoiDungRepository>();
+builder.Services.AddScoped<IDonHangRepository, DonHangRepository>();
 
 // Services
 builder.Services.AddScoped<IDanhMucSuKienService, DanhMucSuKienService>();
 builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
 builder.Services.AddScoped<ISuKienService, SuKienService>();
+builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
+builder.Services.AddScoped<IDonHangService, DonHangService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;

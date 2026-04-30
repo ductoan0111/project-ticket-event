@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.DTOs.Requests;
 using Services.Interfaces;
@@ -46,7 +46,7 @@ namespace TicketEvent.Login.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Unauthorized(ex.Message);
+                return Unauthorized(new { message = ex.Message });
             }
         }
 
@@ -60,7 +60,7 @@ namespace TicketEvent.Login.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Unauthorized(ex.Message);
+                return Unauthorized(new { message = ex.Message });
             }
         }
 

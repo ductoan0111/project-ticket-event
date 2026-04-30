@@ -12,6 +12,7 @@ namespace Repositories.Interfaces
         List<NguoiDung> GetAll();
         NguoiDung? GetById(int id);
         NguoiDung? GetByEmail(string email);
+        NguoiDung? GetByTenDangNhap(string tenDangNhap);
         List<NguoiDung> GetByMaVaiTro(string maVaiTro);
         int Create(NguoiDung user);
         bool Update(NguoiDung user);

@@ -36,13 +36,20 @@ namespace Services.Implementations
 
         public LoginReponse Login(LoginRequest request)
         {
+            // Tìm user theo Email trước, nếu không có thì tìm theo TenDangNhap
+            NguoiDung? user = null;
 
-            var user = _nguoiDungRepo.GetByEmail(request.Email);
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                user = _nguoiDungRepo.GetByEmail(request.Email);
+
+            if (user == null && !string.IsNullOrWhiteSpace(request.TenDangNhap))
+                user = _nguoiDungRepo.GetByTenDangNhap(request.TenDangNhap);
+
             if (user == null)
-                throw new InvalidOperationException("Sai email hoặc mật khẩu.");
+                throw new InvalidOperationException("Sai thông tin đăng nhập.");
 
             if (!Services.Security.PasswordHasher.Verify(request.MatKhau, user.MatKhauHash))
-                throw new InvalidOperationException("Sai email hoặc mật khẩu.");
+                throw new InvalidOperationException("Mật khẩu không đúng.");
 
             if (user.TrangThai == false)
                 throw new InvalidOperationException("Tài khoản đã bị khóa.");

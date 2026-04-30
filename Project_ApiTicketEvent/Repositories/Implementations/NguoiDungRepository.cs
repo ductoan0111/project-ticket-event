@@ -85,6 +85,26 @@ namespace Repositories.Implementations
             return Map(reader);
         }
 
+        public NguoiDung? GetByTenDangNhap(string tenDangNhap)
+        {
+            const string sql = @"
+            SELECT TOP 1 NguoiDungId, HoTen, Email, MatKhauHash, VaiTroId, NgayTao, TrangThai, TenDangNhap, SoDienThoai
+            FROM dbo.NguoiDung
+            WHERE TenDangNhap = @TenDangNhap;";
+
+            using var conn = _factory.CreateConnection();
+            conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            AddParam(cmd, "@TenDangNhap", tenDangNhap);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read()) return null;
+
+            return Map(reader);
+        }
+
         public List<NguoiDung> GetByMaVaiTro(string maVaiTro)
         {
             const string sql = @"

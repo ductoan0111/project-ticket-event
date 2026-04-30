@@ -1,4 +1,4 @@
-﻿using Data;
+using Data;
 using Microsoft.Data.SqlClient;
 using Models.DTOs.Requests;
 using System;
@@ -477,6 +477,23 @@ WHERE SuKienID = @SuKienID;";
                 ["tongDoanhThu"] = reader.GetDecimal(reader.GetOrdinal("TongDoanhThu")),
                 ["tongGiaTriDonHang"] = reader.GetDecimal(reader.GetOrdinal("TongGiaTriDonHang"))
             });
+        }
+
+        public async Task<decimal> GetTongDoanhThuAsync()
+        {
+            const string sql = @"
+SELECT ISNULL(SUM(TongTien), 0)
+FROM dbo.DonHang
+WHERE TrangThai = 1;";
+
+            using var conn = _connectionFactory.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+
+            var result = cmd.ExecuteScalar();
+            return await Task.FromResult(result == DBNull.Value ? 0m : Convert.ToDecimal(result));
         }
 
         private static DonHang MapDonHang(IDataRecord r)
