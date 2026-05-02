@@ -222,10 +222,10 @@ export default function OrganizerReports() {
                           <div className="rpt-percent-bar">
                             <div
                               className="rpt-percent-fill"
-                              style={{ width: `${lv.phanTram}%` }}
+                              style={{ width: `${Math.min(lv.phanTram, 100)}%` }}
                             />
-                            <span>{lv.phanTram?.toFixed(1)}%</span>
                           </div>
+                          <span>{lv.phanTram?.toFixed(1)}%</span>
                         </td>
                       </tr>
                     ))}
