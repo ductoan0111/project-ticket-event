@@ -1,139 +1,115 @@
 import { useState, useEffect } from 'react';
-import { Tag, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Tag, Plus, Edit2, Trash2, X, Search } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import type { Category } from '../../services/admin.service';
-import './AdminCategories.css';
+import '../admin/admin.shared.css';
+
+const EMOJI_SUGGESTIONS = ['🎵', '🏀', '🎭', '🎨', '🍕', '🎮', '🏋️', '💼', '🌍', '🎉', '🔬', '📚'];
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [filtered, setFiltered] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ tenDanhMuc: '', moTa: '', icon: '' });
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [form, setForm] = useState({ tenDanhMuc: '', moTa: '', icon: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    loadCategories();
-  }, []);
+    const q = search.toLowerCase();
+    setFiltered(q ? categories.filter(c => c.tenDanhMuc.toLowerCase().includes(q)) : categories);
+  }, [categories, search]);
 
-  const loadCategories = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getAllCategories();
+      const data = await adminService.getAllCategories().catch(() => []);
       setCategories(data);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  const handleOpenModal = (category?: Category) => {
-    if (category) {
-      setEditingCategory(category);
-      setFormData({
-        tenDanhMuc: category.tenDanhMuc,
-        moTa: category.moTa || '',
-        icon: category.icon || '',
-      });
-    } else {
-      setEditingCategory(null);
-      setFormData({ tenDanhMuc: '', moTa: '', icon: '' });
-    }
+  const openModal = (cat?: Category) => {
+    setEditing(cat || null);
+    setForm(cat ? { tenDanhMuc: cat.tenDanhMuc, moTa: cat.moTa || '', icon: cat.icon || '' } : { tenDanhMuc: '', moTa: '', icon: '' });
     setShowModal(true);
   };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingCategory(null);
-    setFormData({ tenDanhMuc: '', moTa: '', icon: '' });
-  };
+  const closeModal = () => { setShowModal(false); setEditing(null); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.tenDanhMuc.trim()) return;
-
+    if (!form.tenDanhMuc.trim()) return;
     try {
       setSubmitting(true);
-      if (editingCategory) {
-        await adminService.updateCategory(editingCategory.danhMucID, formData);
-      } else {
-        await adminService.createCategory(formData);
-      }
-      await loadCategories();
-      handleCloseModal();
-    } catch (error) {
-      console.error('Failed to save category:', error);
-      alert('Không thể lưu danh mục');
-    } finally {
-      setSubmitting(false);
-    }
+      if (editing) await adminService.updateCategory(editing.danhMucID, form);
+      else await adminService.createCategory(form);
+      await load();
+      closeModal();
+    } catch { alert('Không thể lưu danh mục'); }
+    finally { setSubmitting(false); }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
-
-    try {
-      await adminService.deleteCategory(id);
-      await loadCategories();
-    } catch (error) {
-      console.error('Failed to delete category:', error);
-      alert('Không thể xóa danh mục');
-    }
+    if (!confirm('Xóa danh mục này?')) return;
+    try { await adminService.deleteCategory(id); await load(); }
+    catch { alert('Không thể xóa danh mục'); }
   };
 
-  if (loading) {
-    return (
-      <div className="admin-categories-loading">
-        <div className="spinner"></div>
-        <p>Đang tải danh mục...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="admin-categories">
-      <div className="admin-categories-header">
+    <div className="admin-page">
+      {/* Header */}
+      <div className="admin-page-top">
         <div>
-          <h1>Quản lý danh mục</h1>
-          <p>Quản lý danh mục sự kiện</p>
+          <h1>Danh mục sự kiện</h1>
+          <p>Quản lý các danh mục để phân loại sự kiện</p>
         </div>
-        <button className="admin-btn-primary" onClick={() => handleOpenModal()}>
-          <Plus size={18} />
-          Thêm danh mục
-        </button>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span className="admin-count-chip"><Tag size={13} />{categories.length} danh mục</span>
+          <button className="admin-btn-primary" onClick={() => openModal()}>
+            <Plus size={16} /> Thêm danh mục
+          </button>
+        </div>
       </div>
 
-      {categories.length === 0 ? (
-        <div className="admin-categories-empty">
-          <Tag size={48} />
-          <p>Chưa có danh mục nào</p>
+      {/* Search */}
+      <div style={{ marginBottom: 20 }}>
+        <div className="admin-search-bar">
+          <Search size={15} className="search-icon" />
+          <input
+            placeholder="Tìm danh mục..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
+      </div>
+
+      {/* Grid */}
+      {loading ? (
+        <div className="admin-page-loading"><div className="spinner" /><p>Đang tải...</p></div>
+      ) : filtered.length === 0 ? (
+        <div className="admin-page-empty"><Tag size={40} /><p>Chưa có danh mục nào</p></div>
       ) : (
-        <div className="admin-categories-grid">
-          {categories.map((category) => (
-            <div key={category.danhMucID} className="admin-category-card">
-              <div className="admin-category-icon">
-                {category.icon ? <span>{category.icon}</span> : <Tag size={24} />}
+        <div className="admin-cards-grid">
+          {filtered.map(cat => (
+            <div key={cat.danhMucID} className="admin-item-card">
+              <div className="admin-item-icon">
+                {cat.icon ? cat.icon : <Tag size={20} />}
               </div>
-              <div className="admin-category-content">
-                <h3>{category.tenDanhMuc}</h3>
-                {category.moTa && <p>{category.moTa}</p>}
+              <div className="admin-item-body">
+                <div className="admin-item-title">{cat.tenDanhMuc}</div>
+                <div className="admin-item-desc">{cat.moTa || 'Không có mô tả'}</div>
+                <div style={{ marginTop: 8 }}>
+                  <span className="admin-badge badge-info">ID #{cat.danhMucID}</span>
+                </div>
               </div>
-              <div className="admin-category-actions">
-                <button
-                  className="admin-icon-btn edit"
-                  onClick={() => handleOpenModal(category)}
-                  title="Sửa"
-                >
-                  <Edit2 size={16} />
+              <div className="admin-item-actions">
+                <button className="admin-icon-btn edit" onClick={() => openModal(cat)} title="Sửa">
+                  <Edit2 size={14} />
                 </button>
-                <button
-                  className="admin-icon-btn delete"
-                  onClick={() => handleDelete(category.danhMucID)}
-                  title="Xóa"
-                >
-                  <Trash2 size={16} />
+                <button className="admin-icon-btn delete" onClick={() => handleDelete(cat.danhMucID)} title="Xóa">
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
@@ -141,51 +117,67 @@ export default function AdminCategories() {
         </div>
       )}
 
+      {/* Modal */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={handleCloseModal}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="admin-modal-overlay" onClick={closeModal}>
+          <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
-              <h2>{editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}</h2>
-              <button className="admin-modal-close" onClick={handleCloseModal}>
-                <X size={20} />
-              </button>
+              <h2>{editing ? 'Sửa danh mục' : 'Thêm danh mục mới'}</h2>
+              <button className="admin-modal-close" onClick={closeModal}><X size={18} /></button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="admin-form-group">
                 <label>Tên danh mục *</label>
                 <input
-                  type="text"
-                  value={formData.tenDanhMuc}
-                  onChange={(e) => setFormData({ ...formData, tenDanhMuc: e.target.value })}
+                  value={form.tenDanhMuc}
+                  onChange={e => setForm({ ...form, tenDanhMuc: e.target.value })}
                   placeholder="Ví dụ: Âm nhạc, Thể thao..."
                   required
+                  autoFocus
                 />
               </div>
-              <div className="admin-form-group">
-                <label>Mô tả</label>
-                <textarea
-                  value={formData.moTa}
-                  onChange={(e) => setFormData({ ...formData, moTa: e.target.value })}
-                  placeholder="Mô tả về danh mục..."
-                  rows={3}
-                />
-              </div>
+
               <div className="admin-form-group">
                 <label>Icon (emoji)</label>
                 <input
-                  type="text"
-                  value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="🎵 🏀 🎭 ..."
-                  maxLength={2}
+                  value={form.icon}
+                  onChange={e => setForm({ ...form, icon: e.target.value })}
+                  placeholder="Chọn hoặc nhập emoji..."
+                  maxLength={4}
+                />
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {EMOJI_SUGGESTIONS.map(em => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => setForm({ ...form, icon: em })}
+                      style={{
+                        background: form.icon === em ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
+                        border: form.icon === em ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: 8, padding: '6px 8px', cursor: 'pointer', fontSize: 18,
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-form-group">
+                <label>Mô tả</label>
+                <textarea
+                  value={form.moTa}
+                  onChange={e => setForm({ ...form, moTa: e.target.value })}
+                  placeholder="Mô tả ngắn về danh mục..."
+                  rows={3}
                 />
               </div>
+
               <div className="admin-modal-actions">
-                <button type="button" className="admin-btn-secondary" onClick={handleCloseModal}>
-                  Hủy
-                </button>
+                <button type="button" className="admin-btn-secondary" onClick={closeModal}>Hủy</button>
                 <button type="submit" className="admin-btn-primary" disabled={submitting}>
-                  {submitting ? 'Đang lưu...' : 'Lưu'}
+                  {submitting ? 'Đang lưu...' : (editing ? 'Cập nhật' : 'Thêm mới')}
                 </button>
               </div>
             </form>

@@ -1,5 +1,6 @@
 import { adminApi } from './api';
 import type { OrgEvent } from './organizer.service';
+export type { OrgEvent };
 
 export interface AdminStats {
   tongSuKien: number;
@@ -23,6 +24,17 @@ export interface Location {
   quocGia?: string;
   sucChua?: number;
   trangThai: boolean;
+}
+
+export interface AdminUser {
+  nguoiDungId: number;
+  hoTen: string;
+  email: string;
+  tenDangNhap: string;
+  soDienThoai?: string;
+  vaiTroId?: number;
+  ngayTao?: string;
+  trangThai?: boolean;
 }
 
 export const adminService = {
@@ -92,6 +104,32 @@ export const adminService = {
 
   deleteLocation: async (id: number): Promise<{ success: boolean }> => {
     const response = await adminApi.delete(`/admin/diadiem/${id}`);
+    return response.data;
+  },
+
+  // ===== NGƯỜI DÙNG =====
+  getAllUsers: async (): Promise<AdminUser[]> => {
+    const response = await adminApi.get<AdminUser[]>('/admin/nguoidung');
+    return response.data;
+  },
+
+  getUserById: async (id: number): Promise<AdminUser> => {
+    const response = await adminApi.get<AdminUser>(`/admin/nguoidung/${id}`);
+    return response.data;
+  },
+
+  getUsersByRole: async (maVaiTro: string): Promise<AdminUser[]> => {
+    const response = await adminApi.get<AdminUser[]>(`/admin/nguoidung/by-role?maVaiTro=${maVaiTro}`);
+    return response.data;
+  },
+
+  updateUser: async (id: number, data: Partial<AdminUser>): Promise<{ success: boolean }> => {
+    const response = await adminApi.put(`/admin/nguoidung/${id}`, data);
+    return response.data;
+  },
+
+  disableUser: async (id: number): Promise<{ success: boolean }> => {
+    const response = await adminApi.delete(`/admin/nguoidung/${id}`);
     return response.data;
   },
 };

@@ -38,8 +38,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // If 401, clear tokens and redirect to login
-    if (error.response?.status === 401) {
+    // Không xử lý 401 cho auth endpoints (sai mật khẩu bình thường)
+    const isAuthEndpoint = error.config?.url?.includes('/Auth/');
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       console.error('Unauthorized (401). Clearing tokens and redirecting to login...');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -84,7 +85,8 @@ attendeeApi.interceptors.request.use(
 attendeeApi.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isAuthEndpoint = error.config?.url?.includes('/Auth/');
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       console.error('Unauthorized (401) in attendeeApi. Redirecting to login...');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -123,7 +125,8 @@ organizerApi.interceptors.request.use(
 organizerApi.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isAuthEndpoint = error.config?.url?.includes('/Auth/');
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       console.error('Unauthorized (401) in organizerApi. Redirecting to login...');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -139,7 +142,7 @@ organizerApi.interceptors.response.use(
 // ============================================
 // ADMIN API INSTANCE
 // ============================================
-const ADMIN_API_BASE_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://localhost:44311/api';
+const ADMIN_API_BASE_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://localhost:44392/api';
 
 export const adminApi: AxiosInstance = axios.create({
   baseURL: ADMIN_API_BASE_URL,
@@ -162,7 +165,8 @@ adminApi.interceptors.request.use(
 adminApi.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isAuthEndpoint = error.config?.url?.includes('/Auth/');
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       console.error('Unauthorized (401) in adminApi. Redirecting to login...');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

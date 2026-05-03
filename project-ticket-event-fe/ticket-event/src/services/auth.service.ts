@@ -1,37 +1,37 @@
 import type { LoginRequest, RegisterRequest, LoginResponse } from '../types/auth.types';
-import api from './api';
+import axios from 'axios';
 
-const LOGIN_API_URL = import.meta.env.VITE_API_URL || 'https://localhost:44368/api';
+const AUTH_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:44368/api';
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      console.log('Calling login API:', `${LOGIN_API_URL}/Auth/login`);
-      console.log('Credentials:', credentials);
-
-      const response = await api.post<LoginResponse>(`${LOGIN_API_URL}/Auth/login`, credentials);
-
-      console.log('Login success:', response.data);
+      const response = await axios.post<LoginResponse>(`${AUTH_BASE_URL}/Auth/login`, credentials, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       this.setTokens(response.data.accessToken, response.data.refreshToken);
       return response.data;
     } catch (error: any) {
-      console.error('Login error:', error);
-      const message = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.title ||
+        error.message ||
+        'Tên đăng nhập, email hoặc mật khẩu không đúng';
       throw new Error(message);
     }
   }
 
   async register(userData: RegisterRequest): Promise<void> {
     try {
-      console.log('Calling register API:', `${LOGIN_API_URL}/Auth/register`);
-      console.log('User data:', userData);
-
-      await api.post(`${LOGIN_API_URL}/Auth/register`, userData);
-
-      console.log('Register success');
+      await axios.post(`${AUTH_BASE_URL}/Auth/register`, userData, {
+        headers: { 'Content-Type': 'application/json' },
+      });
     } catch (error: any) {
-      console.error('Register error:', error);
-      const message = error.response?.data?.message || error.message || 'Đăng ký thất bại';
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.title ||
+        error.message ||
+        'Đăng ký thất bại';
       throw new Error(message);
     }
   }
