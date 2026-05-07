@@ -9,6 +9,7 @@ import MyTickets from './pages/attendee/MyTickets';
 import MyOrders from './pages/attendee/MyOrders';
 import Favorites from './pages/attendee/Favorites';
 import Checkout from './pages/attendee/Checkout';
+import MyNotifications from './pages/attendee/MyNotifications';
 import CheckoutSuccess from './pages/attendee/CheckoutSuccess';
 import OrganizerLayout from './pages/organizer/OrganizerLayout.tsx';
 import OrganizerDashboard from './pages/organizer/OrganizerDashboard';
@@ -53,6 +54,7 @@ function App() {
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/notifications" element={<MyNotifications />} />
 
           {/* Organizer routes */}
           <Route path="/organizer" element={<OrganizerLayout />}>

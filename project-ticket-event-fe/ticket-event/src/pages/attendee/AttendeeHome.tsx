@@ -451,6 +451,10 @@ const AttendeeHome = () => {
                     <button onClick={() => { navigate('/favorites'); setShowUserMenu(false); }} className="ah-dropdown-item">
                       <Heart size={15} /><span>Yêu thích</span>
                     </button>
+                    <button onClick={() => { navigate('/notifications'); setShowUserMenu(false); }} className="ah-dropdown-item">
+                      <Bell size={15} /><span>Thông báo</span>
+                      {unreadCount > 0 && <span style={{ marginLeft: 'auto', background: '#6366f1', color: '#fff', borderRadius: '10px', padding: '1px 7px', fontSize: '11px', fontWeight: 700 }}>{unreadCount}</span>}
+                    </button>
                     <div className="ah-dropdown-divider" />
                     <button onClick={handleLogout} className="ah-dropdown-item danger">
                       <LogOut size={15} /><span>Đăng xuất</span>

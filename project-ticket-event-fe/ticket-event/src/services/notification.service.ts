@@ -3,11 +3,15 @@ import { attendeeApi } from './api';
 export interface Notification {
   thongBaoID: number;
   nguoiDungID: number;
+  donHangID?: number;
+  veID?: number;
   tieuDe: string;
   noiDung: string;
-  loai: string;
-  trangThai: number; // 0: chưa đọc, 1: đã đọc
-  ngayTao: string;
+  loaiThongBao: string;   // backend returns loaiThongBao (not loai)
+  trangThai: number;      // 0: chưa đọc, 1: đã đọc/đã gửi
+  thoiGianTao: string;    // backend returns thoiGianTao (not ngayTao)
+  thoiGianGui?: string;
+  ghiChu?: string;
 }
 
 export interface NotificationsResponse {

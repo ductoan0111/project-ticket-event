@@ -29,7 +29,7 @@ export default function Favorites() {
         categoryService.getCategories(),
         locationService.getAll()
       ]);
-      
+
       setFavorites(favoritesData);
       setCategories(categoriesData);
       setLocations(locationsData);
@@ -52,12 +52,19 @@ export default function Favorites() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'Chưa xác định';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Chưa xác định';
+      return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Chưa xác định';
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -108,10 +115,10 @@ export default function Favorites() {
           {favorites.map(favorite => {
             const category = getCategoryIcon(getCategoryName(favorite.danhMucID));
             const isRemoving = removingId === favorite.suKienID;
-            
+
             return (
               <div key={favorite.suKienID} className="favorite-card">
-                <div 
+                <div
                   className="favorite-image"
                   onClick={() => navigate(`/events/${favorite.suKienID}`)}
                 >
@@ -122,7 +129,7 @@ export default function Favorites() {
                       <span style={{ fontSize: '48px' }}>{category.icon}</span>
                     </div>
                   )}
-                  
+
                   <button
                     className={`remove-btn ${isRemoving ? 'removing' : ''}`}
                     onClick={(e) => {
@@ -146,7 +153,7 @@ export default function Favorites() {
                     {getCategoryName(favorite.danhMucID)}
                   </div>
 
-                  <h3 
+                  <h3
                     className="favorite-title"
                     onClick={() => navigate(`/events/${favorite.suKienID}`)}
                   >
@@ -171,17 +178,13 @@ export default function Favorites() {
                   )}
 
                   <div className="favorite-footer">
-                    <div className="favorite-price">
-                      {favorite.giaThapNhat ? (
-                        <>
-                          <span className="price-label">Từ</span>
-                          <span className="price-value">{formatCurrency(favorite.giaThapNhat)}</span>
-                        </>
-                      ) : (
-                        <span className="price-free">Miễn phí</span>
-                      )}
-                    </div>
-                    <button 
+                    {favorite.giaThapNhat && favorite.giaThapNhat > 0 && (
+                      <div className="favorite-price">
+                        <span className="price-label">Từ</span>
+                        <span className="price-value">{formatCurrency(favorite.giaThapNhat)}</span>
+                      </div>
+                    )}
+                    <button
                       className="btn-book"
                       onClick={() => navigate(`/events/${favorite.suKienID}`)}
                     >
@@ -191,7 +194,7 @@ export default function Favorites() {
 
                   <div className="favorite-date-added">
                     <Heart size={12} fill="currentColor" />
-                    Đã thích {formatDate(favorite.ngayYeuThich)}
+                    Đã thích
                   </div>
                 </div>
               </div>
